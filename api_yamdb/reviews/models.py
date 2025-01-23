@@ -44,6 +44,8 @@ class Category(models.Model):
 
 
 class Title(models.Model):
+    """Произведения."""
+
     name = models.CharField('Наименование произведения', max_length=256)
     year = models.PositiveSmallIntegerField(
         'Дата выхода произведения',
@@ -68,6 +70,8 @@ class Title(models.Model):
 
 
 class TitleGenres(models.Model):
+    """Связь произведений и жанров."""
+
     title = models.ForeignKey(
         Title, null=True, blank=True, on_delete=models.SET_NULL)
     genre = models.ForeignKey(
