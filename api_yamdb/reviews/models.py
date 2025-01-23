@@ -48,6 +48,10 @@ class Title(models.Model):
     year = models.PositiveSmallIntegerField(
         'Дата выхода произведения',
         validators=(current_year,))
+    rating = models.SmallIntegerField(
+        default=None,
+        validators=[MinValueValidator(1), MaxValueValidator(10)]
+    )
     description = models.TextField('Описание', null=True, blank=True,
                                    help_text='Опишите произведение')
     category = models.ForeignKey(
@@ -65,6 +69,9 @@ class Title(models.Model):
 
     def __str__(self):
         return self.name
+
+    # def rating_update():
+    #     pass
 
 
 class TitleGenres(models.Model):
@@ -138,3 +145,40 @@ class Comment(models.Model):
     class Meta:
         verbose_name = 'комментарий'
         verbose_name_plural = 'Комментарии'
+
+
+# class Score(models.Model):
+#     """Модель рейтинга произведения."""
+
+#     title_id = models.OneToOneField(
+#         Title,
+#         on_delete=models.CASCADE
+#     )
+#     rating = models.SmallIntegerField(choices=DEFAULT_CHOICES)
+
+#     class Meta:
+#         constraints = [
+#             # На произведение пользователь может оставить только один отзыв.
+#             models.UniqueConstraint(
+#                 fields=['title_id', 'author'],
+#                 name='one_review_per_author'
+#             )
+#         ]
+
+# class Post(models.Model):
+#     school_name = models.CharField(max_length=200, default='')
+#     country = models.CharField(max_length=200, default='KZ')
+#     city = models.CharField(max_length=200, default='')
+#     content = models.TextField()
+#     website = models.CharField(max_length=200, default='')
+#     your_email = models.EmailField(default='')
+#     created_at = models.DateTimeField(auto_now_add=True)
+#     updated_at = models.DateTimeField(auto_now=True)
+#     author = models.ForeignKey(User, on_delete=models.CASCADE)
+
+#     def rating(self):
+#         comments = self.comments.all()
+#         rating = 0
+#         for i in comments:
+#              rating = rating + i.score
+#         return rating/len(comments)
