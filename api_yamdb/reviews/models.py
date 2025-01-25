@@ -53,6 +53,7 @@ class Title(models.Model):
     rating = models.SmallIntegerField(
         default=None,
         blank=True,
+        null=True,
         verbose_name='Рейтинг',
         validators=[MinValueValidator(1), MaxValueValidator(10)]
     )

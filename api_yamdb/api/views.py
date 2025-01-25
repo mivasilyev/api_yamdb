@@ -1,5 +1,6 @@
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404, render
-from rest_framework import filters, generics, viewsets
+from rest_framework import filters, generics, serializers, viewsets
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import (AllowAny, IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
@@ -36,18 +37,34 @@ class ReviewViewSet(viewsets.ModelViewSet):
     def get_title(self):
         return get_object_or_404(Title, id=self.kwargs.get('title_id'))
 
+    def update_rating(self):
+        """Обновление рейтинга в модели Title."""
+        title = self.get_title()
+        avg_rating = title.reviews.aggregate(Avg('score', default=None))
+        new_rating = avg_rating['score__avg']
+        if new_rating is not None:
+            new_rating = round(avg_rating['score__avg'])
+        Title.objects.filter(id=title.id).update(rating=new_rating)
+
     def get_queryset(self):
         return self.get_title().reviews.all()
 
     def perform_create(self, serializer):
+        if self.get_title().reviews.filter(author=self.request.user):
+            raise serializers.ValidationError(
+                'Вы не можете дважды дать отзыв на одно произведение.'
+            )
         serializer.save(title_id=self.get_title(), author=self.request.user)
-        # здесь должна запускаться функция апдейта рейтинга в модели Title.
-        # Title.get_title().update_rating()
+        # После записи отзыва обновляем рейтинг.
+        self.update_rating()
+
+    def perform_update(self, serializer):
+        super().perform_update(serializer)
+        self.update_rating()
 
     def perform_destroy(self, instance):
-        return super().perform_destroy(instance)
-        # Здесь должна запускаться функция апдейта рейтинга в модели Title.
-
+        super().perform_destroy(instance)
+        self.update_rating()
 
 #   /titles/{title_id}/reviews/:
 #    GET: Получение списка всех отзывов, доступно без токена. 200/404
@@ -69,7 +86,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         return self.get_review().comments.all()
 
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user, review=self.get_review())
+        serializer.save(author=self.request.user, review_id=self.get_review())
 
 # /titles/{title_id}/reviews/{review_id}/comments/:
 #  GET: Получение списка всех комментариев к отзыву, без токена. 200/404
@@ -78,19 +95,3 @@ class CommentViewSet(viewsets.ModelViewSet):
 #  GET: Получение комментария к отзыву, без токена. 200/404
 #  PATCH: Обновление комментария к отзыву, аутентифицированный. 200/400/401/403/404
 #  DELETE: Удаление комментария к отзыву, автор, модератор, админ. 204/401/403/404
-
-# class BirthdayDetailView(DetailView):
-#     model = Birthday
-
-#     def get_context_data(self, **kwargs):
-#         # Получаем словарь контекста:
-#         context = super().get_context_data(**kwargs)
-#         # Добавляем в словарь новый ключ:
-#         context['birthday_countdown'] = calculate_birthday_countdown(
-#             # Дату рождения берём из объекта в словаре context:
-#             self.object.birthday
-#         )
-#         # Возвращаем словарь контекста.
-#         return context
-
-# title_score = Review.objects.filter(title_id=title_id)  # (Avg('score')) ['views__avg']
