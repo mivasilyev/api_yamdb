@@ -1,33 +1,54 @@
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404, render
-from rest_framework import filters, generics, serializers, viewsets
+from rest_framework import filters, generics, serializers, viewsets, mixins
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import (AllowAny, IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 
 
-from api.serializers import (CategorySerializer, CommentSerializer,
-                             ReviewSerializer, TitleSerializer, UserSerializer)
-from api.permissions import IsAuthorOrReadOnlyPermission
-from reviews.models import Category, Comment, Review, Title, User
+from api.serializers import (
+    CategorySerializer, CommentSerializer, GenreSerializer, ReviewSerializer,
+    TitleSerializer, UserSerializer)
+from api.permissions import IsAdminOrReadOnly, IsAuthorOrReadOnlyPermission
+from reviews.models import Category, Comment, Genre, Review, Title, User
 
 
-class UserViewSet(viewsets.ModelViewSet):  # удалить. Это пишет Марат.
+class UserViewSet(viewsets.ModelViewSet):  # удалить.
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = (AllowAny,)
 
 
-class CategoryViewSet(viewsets.ModelViewSet):  # удалить. Это пишет Марат.
+class CategoryGenreViewset(
+        viewsets.GenericViewSet, mixins.ListModelMixin,
+        mixins.CreateModelMixin, mixins.DestroyModelMixin):
+    """База категорий и жанров."""
+
+    permission_classes = (IsAdminOrReadOnly,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
+    lookup_field = 'slug'
+
+
+class CategoryViewSet(CategoryGenreViewset):
+    """Категории произведений."""
+
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = (AllowAny,)
 
 
-class TitleViewSet(viewsets.ModelViewSet):  # удалить. Это пишет Марат.
+class GenreViewSet(CategoryGenreViewset):
+    """Жанры произведений."""
+
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
+
+
+class TitleViewSet(viewsets.ModelViewSet):
+    """Произведения."""
+
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
-    permission_classes = (IsAuthorOrReadOnlyPermission,)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
@@ -66,14 +87,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
         super().perform_destroy(instance)
         self.update_rating()
 
-#   /titles/{title_id}/reviews/:
-#    GET: Получение списка всех отзывов, доступно без токена. 200/404
-#    POST: Добавление нового отзыва, аутентифицированные. 201/400/401/404
-#   /titles/{title_id}/reviews/{review_id}/:
-#    GET: Получение отзыва по id, доступно без токена. 200/404
-#    PATCH: Обновление отзыва по id, по токену. 200/400/401/403/404
-#    DELETE: Удалить отзыв по id, по токену. 204/401/403/404
-
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
@@ -88,10 +101,18 @@ class CommentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user, review_id=self.get_review())
 
+# /titles/{title_id}/reviews/:
+#  GET: Получение списка всех отзывов, доступно без токена. 200/404
+#  POST: Добавление нового отзыва, аутентифицированные. 201/400/401/404
+# /titles/{title_id}/reviews/{review_id}/:
+#  GET: Получение отзыва по id, доступно без токена. 200/404
+#  PATCH: Обновление отзыва по id, по токену. 200/400/401/403/404
+#  DELETE: Удалить отзыв по id, по токену. 204/401/403/404
+
 # /titles/{title_id}/reviews/{review_id}/comments/:
 #  GET: Получение списка всех комментариев к отзыву, без токена. 200/404
 #  POST: Добавление комментария к отзыву, по токену. 201/400/401/404
 # /titles/{title_id}/reviews/{review_id}/comments/{comment_id}/:
 #  GET: Получение комментария к отзыву, без токена. 200/404
-#  PATCH: Обновление комментария к отзыву, аутентифицированный. 200/400/401/403/404
-#  DELETE: Удаление комментария к отзыву, автор, модератор, админ. 204/401/403/404
+#  PATCH: Обновление комментария к отзыву, аутентифицир. 200/400/401/403/404
+#  DELETE: Удаление комментария к отзыву, автор, модер., админ. 204/401/403/404
