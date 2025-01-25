@@ -1,6 +1,9 @@
 from django.db.models import Avg
 from rest_framework import serializers
+from rest_framework.validators import UniqueValidator
+
 from reviews.models import Category, Comment, Genre, Review, Title, User
+from reviews.validators import current_year
 
 
 class UserSerializer(serializers.ModelSerializer):  # удалить после отладки.
@@ -13,6 +16,17 @@ class UserSerializer(serializers.ModelSerializer):  # удалить после 
 class CategorySerializer(serializers.ModelSerializer):
     """Категории."""
 
+    slug = serializers.SlugField(
+        max_length=50,
+        required=True,
+        validators=[
+            UniqueValidator(
+                queryset=Category.objects.all(),
+                message='Такой slug уже есть.'
+            )
+        ]
+    )
+
     class Meta:
         model = Category
         fields = ('name', 'slug',)
@@ -21,12 +35,23 @@ class CategorySerializer(serializers.ModelSerializer):
 class GenreSerializer(serializers.ModelSerializer):
     """Жанры."""
 
+    slug = serializers.SlugField(
+        max_length=50,
+        required=True,
+        validators=[
+            UniqueValidator(
+                queryset=Genre.objects.all(),
+                message='Такой slug уже есть.'
+            )
+        ]
+    )
+
     class Meta:
         model = Genre
         fields = ('name', 'slug',)
 
 
-class TitleSerializer(serializers.ModelSerializer):
+class TitleGetSerializer(serializers.ModelSerializer):
     """Для GET-запросов произведений."""
 
     category = CategorySerializer(read_only=True)
@@ -37,6 +62,26 @@ class TitleSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'year',
                   'description', 'category', 'genre')
         read_only_fields = ('rating',)
+
+
+class TitleSerializer(serializers.ModelSerializer):
+    """Для POST, PATCH и DELETE запросов произведений."""
+
+    category = serializers.SlugRelatedField(
+        slug_field='slug',
+        queryset=Category.objects.all()
+    )
+    genre = serializers.SlugRelatedField(
+        many=True,
+        slug_field='slug',
+        queryset=Genre.objects.all()
+    )
+    year = serializers.IntegerField(validators=(current_year,))
+
+    class Meta:
+        model = Title
+        fields = ('id', 'name', 'year',
+                  'description', 'category', 'genre')
 
 
 class ReviewSerializer(serializers.ModelSerializer):

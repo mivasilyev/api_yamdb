@@ -8,7 +8,7 @@ from rest_framework.permissions import (AllowAny, IsAuthenticated,
 
 from api.serializers import (
     CategorySerializer, CommentSerializer, GenreSerializer, ReviewSerializer,
-    TitleSerializer, UserSerializer)
+    TitleGetSerializer, TitleSerializer, UserSerializer)
 from api.permissions import IsAdminOrReadOnly, IsAuthorOrReadOnlyPermission
 from reviews.models import Category, Comment, Genre, Review, Title, User
 
@@ -22,7 +22,7 @@ class UserViewSet(viewsets.ModelViewSet):  # удалить.
 class CategoryGenreViewset(
         viewsets.GenericViewSet, mixins.ListModelMixin,
         mixins.CreateModelMixin, mixins.DestroyModelMixin):
-    """База категорий и жанров."""
+    """Базовый сет для категорий и жанров."""
 
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (filters.SearchFilter,)
@@ -48,7 +48,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     """Произведения."""
 
     queryset = Title.objects.all()
-    serializer_class = TitleSerializer
+    serializer_class = TitleGetSerializer
 
 
 class ReviewViewSet(viewsets.ModelViewSet):

@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.validators import (
+    MaxValueValidator, MinValueValidator, RegexValidator)
 from django.db import models
 
 from reviews.validators import current_year
@@ -15,6 +16,9 @@ class Genre(models.Model):
                             help_text=('Идентификатор страницы для URL; '
                                        'разрешены символы латиницы, цифры, '
                                        'дефис и подчёркивание.'), unique=True,
+                            validators=[RegexValidator(
+                                regex=r'^[-a-zA-Z0-9_]+$',
+                                message='Слаг содержит недопустимый символ')],
                             verbose_name='Идентификатор жанра')
 
     class Meta:
@@ -33,6 +37,9 @@ class Category(models.Model):
                             help_text=('Идентификатор страницы для URL; '
                                        'разрешены символы латиницы, цифры, '
                                        'дефис и подчёркивание.'), unique=True,
+                            validators=[RegexValidator(
+                                regex=r'^[-a-zA-Z0-9_]+$',
+                                message='Слаг содержит недопустимый символ')],
                             verbose_name='Идентификатор категории')
 
     class Meta:
