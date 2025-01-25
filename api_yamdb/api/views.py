@@ -1,32 +1,53 @@
 from django.shortcuts import get_object_or_404, render
-from rest_framework import filters, generics, viewsets
+from rest_framework import filters, generics, viewsets, mixins
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import (AllowAny, IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 
 
-from api.serializers import (CategorySerializer, CommentSerializer,
-                             ReviewSerializer, TitleSerializer, UserSerializer)
-from api.permissions import IsAuthorOrReadOnlyPermission
-from reviews.models import Category, Comment, Review, Title, User
+from api.serializers import (
+    CategorySerializer, CommentSerializer, GenreSerializer, ReviewSerializer,
+    TitleSerializer, UserSerializer)
+from api.permissions import IsAdminOrReadOnly, IsAuthorOrReadOnlyPermission
+from reviews.models import Category, Comment, Genre, Review, Title, User
 
 
-class UserViewSet(viewsets.ModelViewSet):  # удалить. Это пишет Марат.
+class UserViewSet(viewsets.ModelViewSet):  # удалить.
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = (AllowAny,)
 
 
-class CategoryViewSet(viewsets.ModelViewSet):  # удалить. Это пишет Марат.
+class CategoryGenreViewset(
+        viewsets.GenericViewSet, mixins.ListModelMixin,
+        mixins.CreateModelMixin, mixins.DestroyModelMixin):
+    """База категорий и жанров."""
+
+    permission_classes = (IsAdminOrReadOnly,)
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('name',)
+    lookup_field = 'slug'
+
+
+class CategoryViewSet(CategoryGenreViewset):
+    """Категории произведений."""
+
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = (AllowAny,)
 
 
-class TitleViewSet(viewsets.ModelViewSet):  # удалить. Это пишет Марат.
+class GenreViewSet(CategoryGenreViewset):
+    """Жанры произведений."""
+
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
+
+
+class TitleViewSet(viewsets.ModelViewSet):
+    """Произведения."""
+
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
-    permission_classes = (IsAuthorOrReadOnlyPermission,)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
