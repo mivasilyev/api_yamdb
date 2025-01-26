@@ -4,6 +4,7 @@ from pprint import pprint
 from django.core.mail import send_mail
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404, render
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, generics, serializers, viewsets, mixins, status
 from rest_framework.response import Response
 from rest_framework.settings import api_settings
@@ -16,6 +17,7 @@ from api.serializers import (
     CategorySerializer, CommentSerializer, GenreSerializer, ReviewSerializer,
     TitleGetSerializer, TitleSerializer, UserSerializer, UserSignupSerializer)
 from api.permissions import IsAdminOrReadOnly, IsAuthorOrReadOnlyPermission
+from api.filters import TitleManyFilters
 from reviews.models import Category, Comment, Genre, Review, Title, User
 
 
@@ -54,7 +56,7 @@ class UserSignup(generics.CreateAPIView):
                         status=status.HTTP_200_OK,
                         headers=headers)
 
-    def perform_create(self, serializer, confirmation_code):        
+    def perform_create(self, serializer, confirmation_code):
         serializer.save(confirmation_code=confirmation_code, is_confirmed=0)
 
 
@@ -86,8 +88,19 @@ class GenreViewSet(CategoryGenreViewset):
 class TitleViewSet(viewsets.ModelViewSet):
     """Произведения."""
 
-    queryset = Title.objects.all()
+    queryset = Title.objects.select_related(
+        'category').prefetch_related('genre').all()
     serializer_class = TitleGetSerializer
+    permission_classes = (IsAdminOrReadOnly,)
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = TitleManyFilters
+    http_method_names = ('get', 'post', 'patch', 'delete')
+
+    def get_serializer_class(self):
+        """Выбор сериализатора."""
+        if self.request.method == 'GET':
+            return TitleGetSerializer
+        return TitleSerializer
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
