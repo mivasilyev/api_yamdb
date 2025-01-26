@@ -7,6 +7,7 @@ from api.views import (
     GenreViewSet,
     ReviewViewSet,
     TitleViewSet,
+    UserSignup,
     UserViewSet  # удалить после отладки.
 )
 
@@ -28,6 +29,7 @@ v1_router.register(
 )
 
 urlpatterns = [
+    path('v1/auth/signup/', UserSignup.as_view()),
     path('v1/', include(v1_router.urls)),
     path('v1/', include('djoser.urls')),  # Для управления пользователями
     path('v1/', include('djoser.urls.jwt')),  # Для управления JWT-токенами

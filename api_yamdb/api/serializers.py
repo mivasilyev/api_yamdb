@@ -1,4 +1,6 @@
+from pprint import pprint
 from django.db.models import Avg
+from django.utils.text import slugify
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
@@ -11,6 +13,45 @@ class UserSerializer(serializers.ModelSerializer):  # удалить после 
     class Meta:
         model = User
         fields = '__all__'
+
+
+class UserSignupSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ('username', 'email')
+        read_only_fields = ('confirmation_code', 'is_confirmed')
+
+    def validate(self, data):
+        # Проверка на наличие имени и имэйла в запросе на подписку.
+        if 'username' not in data or 'email' not in data:
+            raise serializers.ValidationError(
+                'Для регистрации пользователя предоставьте имя (username) '
+                'и адрес эл. почты (email).'
+            )
+        return data
+
+    def validate_username(self, value):
+        if len(slugify(value)) == 0:
+            raise serializers.ValidationError(
+                'Введите корректное имя пользователя.'
+            )
+        if User.objects.filter(username=value).exists():
+            raise serializers.ValidationError(
+                'Пользователь с таким именем уже существует.'
+            )
+        return value
+
+    def validate_email(self, value):
+        if '@' not in value:
+            raise serializers.ValidationError(
+                'Введите корректный адрес электронной почты.'
+            )
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError(
+                'Этот электронный адрес уже использует другой пользователь.'
+            )
+        return value
 
 
 class CategorySerializer(serializers.ModelSerializer):

@@ -1,14 +1,20 @@
+import random
+from pprint import pprint
+
+from django.core.mail import send_mail
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404, render
-from rest_framework import filters, generics, serializers, viewsets, mixins
+from rest_framework import filters, generics, serializers, viewsets, mixins, status
+from rest_framework.response import Response
+from rest_framework.settings import api_settings
+from rest_framework.views import APIView
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import (AllowAny, IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 
-
 from api.serializers import (
     CategorySerializer, CommentSerializer, GenreSerializer, ReviewSerializer,
-    TitleGetSerializer, TitleSerializer, UserSerializer)
+    TitleGetSerializer, TitleSerializer, UserSerializer, UserSignupSerializer)
 from api.permissions import IsAdminOrReadOnly, IsAuthorOrReadOnlyPermission
 from reviews.models import Category, Comment, Genre, Review, Title, User
 
@@ -17,6 +23,39 @@ class UserViewSet(viewsets.ModelViewSet):  # удалить.
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = (AllowAny,)
+
+
+class UserSignup(generics.CreateAPIView):
+    """Вью-класс для запросов на регистрацию новых пользователей."""
+    queryset = User.objects.all()
+    serializer_class = UserSignupSerializer
+    permission_classes = (AllowAny,)
+
+    def get_email(self, obj):
+        return obj.email
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        confirmation_code = random.randrange(1000, 9999)
+        self.perform_create(serializer, confirmation_code)
+        headers = self.get_success_headers(serializer.data)
+        email = request.data['email']
+        send_mail(
+            subject='Подтверждение подписки на YaMDb',
+            message='Для завершения регистрации пользователя на YaMDb и '
+            f'получения токена ваш код {confirmation_code}. Отправьте его POST'
+            '-запросом на /api/v1/auth/token/ с параметрами '
+            'username и confirmation_code.',
+            from_email='from@api_yamdb.ru',
+            recipient_list=[email]
+        )
+        return Response(serializer.data,
+                        status=status.HTTP_200_OK,
+                        headers=headers)
+
+    def perform_create(self, serializer, confirmation_code):        
+        serializer.save(confirmation_code=confirmation_code, is_confirmed=0)
 
 
 class CategoryGenreViewset(
