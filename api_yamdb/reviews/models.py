@@ -70,7 +70,7 @@ class Title(models.Model):
         Category, null=True, blank=True, on_delete=models.SET_NULL,
         verbose_name='Название категории',
     )
-    genres = models.ManyToManyField(
+    genre = models.ManyToManyField(
         Genre, through='TitleGenres',
         verbose_name='Жанры')
 
