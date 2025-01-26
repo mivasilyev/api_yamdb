@@ -1,30 +1,30 @@
 import random
 from pprint import pprint
 
+import jwt
 from django.core.mail import send_mail
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404, render
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, generics, serializers, viewsets, mixins, status
+from rest_framework import (filters, generics, mixins, serializers, status,
+                            viewsets)
+# from rest_framework.authtoken.models import Token
+from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.permissions import (AllowAny, IsAdminUser, IsAuthenticated,
+                                        IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 from rest_framework.settings import api_settings
 from rest_framework.views import APIView
-from rest_framework.pagination import LimitOffsetPagination
-from rest_framework.permissions import (AllowAny, IsAuthenticated,
-                                        IsAuthenticatedOrReadOnly)
 
-from api.serializers import (
-    CategorySerializer, CommentSerializer, GenreSerializer, ReviewSerializer,
-    TitleGetSerializer, TitleSerializer, UserSerializer, UserSignupSerializer)
 from api.permissions import IsAdminOrReadOnly, IsAuthorOrReadOnlyPermission
-from api.filters import TitleManyFilters
 from reviews.models import Category, Comment, Genre, Review, Title, User
 
 
-class UserViewSet(viewsets.ModelViewSet):  # удалить.
+class UserViewSet(viewsets.ModelViewSet):
+    """Вьюсет для регистрации пользователей админом."""
     queryset = User.objects.all()
-    serializer_class = UserSerializer
-    permission_classes = (AllowAny,)
+    serializer_class = UserSignupSerializer
+    permission_classes = (AllowAny,)  # (IsAdminUser,)
 
 
 class UserSignup(generics.CreateAPIView):
@@ -33,8 +33,8 @@ class UserSignup(generics.CreateAPIView):
     serializer_class = UserSignupSerializer
     permission_classes = (AllowAny,)
 
-    def get_email(self, obj):
-        return obj.email
+    # def get_email(self, obj):
+    #     return obj.email
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -58,6 +58,35 @@ class UserSignup(generics.CreateAPIView):
 
     def perform_create(self, serializer, confirmation_code):
         serializer.save(confirmation_code=confirmation_code, is_confirmed=0)
+
+
+class UserGetToken(APIView):
+    """Вью-класс получения токена по username и confirmation_code."""
+    # queryset = User.objects.all()
+    # serializer_class = UserSignupSerializer
+    permission_classes = (AllowAny,)
+
+    def post(self, request):
+        # Проверяем наличие в базе username и confirmation_code.
+        serializer = UserSignupSerializer(data=request.data)
+        username = request.data['username']
+        confirmation_code = request.data['confirmation_code']
+        user = get_object_or_404(User, username=username)
+        if user.confirmation_code == confirmation_code:
+            # здесь делаем токен и отправляем его в ответе.
+            jwt_token = user.token
+            return Response(jwt_token)
+        raise serializers.ValidationError(
+            'Пользователя с такими данными в системе не зарегистрировано.'
+        )
+
+    # def post(self, request):
+    #     serializer = CatSerializer(data=request.data)
+    #     if serializer.is_valid():
+    #         serializer.save()
+    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+# POST-запрос с параметрами username и confirmation_code на эндпоинт /api/v1/auth/token/, в ответе на запрос ему приходит token (JWT-токен).
 
 
 class CategoryGenreViewset(
