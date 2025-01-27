@@ -6,6 +6,8 @@ from rest_framework.validators import UniqueValidator
 
 from reviews.models import Category, Comment, Genre, Review, Title, User
 from reviews.validators import current_year
+from api.validators import UsernameRegexValidator, username_me
+
 
 
 class UserSerializer(serializers.ModelSerializer):  # удалить после отладки.
@@ -15,43 +17,21 @@ class UserSerializer(serializers.ModelSerializer):  # удалить после 
         fields = '__all__'
 
 
-class UserSignupSerializer(serializers.ModelSerializer):
+class SingUpSerializer(serializers.Serializer):
+    """Сериализатор для регистрации."""
 
-    class Meta:
-        model = User
-        fields = ('username', 'email')
-        read_only_fields = ('confirmation_code', 'is_confirmed')
-
-    def validate(self, data):
-        # Проверка на наличие имени и имэйла в запросе на подписку.
-        if 'username' not in data or 'email' not in data:
-            raise serializers.ValidationError(
-                'Для регистрации пользователя предоставьте имя (username) '
-                'и адрес эл. почты (email).'
-            )
-        return data
+    email = serializers.EmailField(
+        required=True,
+        validators=[UniqueValidator(queryset=User.objects.all())]
+    )
+    username = serializers.CharField(
+        required=True,
+        validators=[UsernameRegexValidator(), ]
+    )
 
     def validate_username(self, value):
-        if len(slugify(value)) == 0:
-            raise serializers.ValidationError(
-                'Введите корректное имя пользователя.'
-            )
-        if User.objects.filter(username=value).exists():
-            raise serializers.ValidationError(
-                'Пользователь с таким именем уже существует.'
-            )
-        return value
+        return username_me(value)
 
-    def validate_email(self, value):
-        if '@' not in value:
-            raise serializers.ValidationError(
-                'Введите корректный адрес электронной почты.'
-            )
-        if User.objects.filter(email=value).exists():
-            raise serializers.ValidationError(
-                'Этот электронный адрес уже использует другой пользователь.'
-            )
-        return value
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -212,3 +192,33 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
         fields = ('author', 'review_id', 'text', 'pub_date')
         read_only_fields = ('review_id', )
+
+
+class SingUpSerializer(serializers.Serializer):
+    """Сериализатор для регистрации."""
+
+    email = serializers.EmailField(
+        required=True,
+        validators=[UniqueValidator(queryset=User.objects.all())]
+    )
+    username = serializers.CharField(
+        required=True,
+        validators=[UsernameRegexValidator(), ]
+    )
+
+    def validate_username(self, value):
+        return username_me(value)
+
+
+
+class GetTokenSerializer(serializers.Serializer):
+    """Сериализатор для получения токена при регистрации."""
+
+    username = serializers.CharField(
+        required=True,
+        validators=(UsernameRegexValidator(), )
+    )
+    confirmation_code = serializers.CharField(required=True)
+
+    #def validate_username(self, value):
+    #    return username_me(value)
