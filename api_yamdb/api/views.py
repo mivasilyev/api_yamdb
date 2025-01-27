@@ -21,6 +21,7 @@ from api.serializers import (CategorySerializer, CommentSerializer,
                              TitleGetSerializer, TitleSerializer,
                              UserSerializer, UserSignupSerializer)
 from reviews.models import Category, Comment, Genre, Review, Title, User
+from users.models import ROLES
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -35,9 +36,6 @@ class UserSignup(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSignupSerializer
     permission_classes = (AllowAny,)
-
-    # def get_email(self, obj):
-    #     return obj.email
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -60,7 +58,9 @@ class UserSignup(generics.CreateAPIView):
                         headers=headers)
 
     def perform_create(self, serializer, confirmation_code):
-        serializer.save(confirmation_code=confirmation_code, is_confirmed=0)
+        serializer.save(
+            confirmation_code=confirmation_code,
+            role=ROLES[0][0])
 
 
 class UserGetToken(APIView):
@@ -78,7 +78,7 @@ class UserGetToken(APIView):
         if user.confirmation_code == confirmation_code:
             # здесь делаем токен и отправляем его в ответе.
             jwt_token = user.token
-            return Response(jwt_token)
+            return Response({'Token': jwt_token})
         raise serializers.ValidationError(
             'Пользователя с такими данными в системе не зарегистрировано.'
         )

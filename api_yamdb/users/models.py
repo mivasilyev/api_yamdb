@@ -1,15 +1,22 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
+ROLES = (
+    ('user', 'Пользователь'),
+    ('moderator', 'Модератор'),
+    ('admin', 'Администратор'),
+    ('superuser', 'Суперпользователь'),
+)
+
 
 class MyUser(AbstractUser):
-    first_name = models.CharField(max_length=150)
-    email = models.CharField(max_length=100)
+    first_name = models.CharField('Имя', max_length=150)
+    email = models.CharField('Электронная почта', max_length=100)
     bio = models.TextField('Биография', blank=True)
-    role = models.TextField('Роль', blank=True)
+    is_staff = models.BooleanField('Персонал', default=False)
+    role = models.CharField('Роль', max_length=9, choices=ROLES)
     confirmation_code = models.SmallIntegerField('Код подтверждения',
                                                  blank=True, null=True)
-    is_confirmed = models.BooleanField('Подтвержден', blank=True, null=True)
 
     @property
     def token(self):
