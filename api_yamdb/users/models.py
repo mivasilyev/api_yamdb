@@ -1,11 +1,14 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
+USER = 'user'
+MODERATOR = 'moderator'
+ADMIN = 'admin'
+
 ROLES = (
     ('user', 'Пользователь'),
     ('moderator', 'Модератор'),
     ('admin', 'Администратор'),
-    ('superuser', 'Суперпользователь'),
 )
 
 
@@ -14,7 +17,7 @@ class MyUser(AbstractUser):
     email = models.CharField('Электронная почта', max_length=100)
     bio = models.TextField('Биография', blank=True)
     is_staff = models.BooleanField('Персонал', default=False)
-    role = models.CharField('Роль', max_length=9, choices=ROLES)
+    role = models.CharField('Роль', max_length=9, choices=ROLES, default=USER)
     confirmation_code = models.SmallIntegerField('Код подтверждения',
                                                  blank=True, null=True)
 
@@ -35,3 +38,15 @@ class MyUser(AbstractUser):
         }, settings.SECRET_KEY, algorithm='HS256')
 
         return token  # .decode('utf-8')
+
+    @property
+    def is_admin(self):
+        return self.role == ADMIN or self.is_superuser or self.is_staff
+
+    @property
+    def is_user(self):
+        return self.role == USER
+
+    @property
+    def is_moderator(self):
+        return self.role == MODERATOR

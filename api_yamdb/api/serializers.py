@@ -103,19 +103,17 @@ class TitleGetSerializer(serializers.ModelSerializer):
         model = Title
         fields = ('id', 'name', 'year',
                   'description', 'category', 'genre', 'rating')
-        read_only_fields = ('id', 'rating',)
+        read_only_fields = ('id',)
 
 
 class TitleSerializer(serializers.ModelSerializer):
     """Для POST, PATCH и DELETE запросов произведений."""
 
     category = serializers.SlugRelatedField(
-        read_only=False,
         slug_field='slug',
         queryset=Category.objects.all()
     )
     genre = serializers.SlugRelatedField(
-        read_only=False,
         many=True,
         slug_field='slug',
         queryset=Genre.objects.all()
@@ -127,7 +125,6 @@ class TitleSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'year',
                   'description', 'category', 'genre',)
         read_only_fields = ('id',)
-        lookup_field = 'genre__slug'
 
 
 class ReviewSerializer(serializers.ModelSerializer):
