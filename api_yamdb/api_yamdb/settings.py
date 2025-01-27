@@ -147,4 +147,4 @@ LENG_EMAIL = 254
 LENG_CUT = 30
 
 MESSAGE_EMAIL_EXISTS = 'Этот email уже занят'
-MESSAGE_USERNAME_EXISTS = 'Это имя уже занят'
+MESSAGE_USERNAME_EXISTS = 'Это имя уже занято'

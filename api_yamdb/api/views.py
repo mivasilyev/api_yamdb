@@ -2,6 +2,7 @@ import random
 from pprint import pprint
 
 import jwt
+from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.db import IntegrityError
@@ -44,8 +45,12 @@ class UserSignUp(views.APIView):
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
+        confirmation_code = random.randrange(1000, 9999)
+        
         try:
             user, _ = User.objects.get_or_create(
+                confirmation_code=confirmation_code,
+                role=ROLES[0][0],
                 username=serializer.validated_data.get('username'),
                 email=serializer.validated_data.get('email')
             )
@@ -56,13 +61,15 @@ class UserSignUp(views.APIView):
                 else settings.MESSAGE_USERNAME_EXISTS,
                 status.HTTP_400_BAD_REQUEST
             )
-        code = default_token_generator.make_token(user)
+        
         send_mail(
             'Код токена',
-            f'Код для получения токена {code}',
+            f'Код для получения токена {confirmation_code}',
             settings.DEFAULT_FROM_EMAIL,
             [serializer.validated_data.get('email')]
         )
+        
+            
         return response.Response(
             serializer.data, status=status.HTTP_200_OK
         )
@@ -70,13 +77,12 @@ class UserSignUp(views.APIView):
 
 class UserGetToken(APIView):
     """Вью-класс получения токена по username и confirmation_code."""
-    # queryset = User.objects.all()
-    # serializer_class = UserSignupSerializer
+
     permission_classes = (AllowAny,)
 
     def post(self, request):
-        
         """Функция получения токена при регистрации."""
+
         serializer = GetTokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         username = serializer.validated_data.get('username')
@@ -84,7 +90,7 @@ class UserGetToken(APIView):
         confirmation_code = serializer.validated_data.get(
             'confirmation_code'
         )
-        if default_token_generator.check_token(user, confirmation_code):
+        if user.confirmation_code == int(confirmation_code):
             token = AccessToken.for_user(user)
             return Response(
                 {'token': str(token)}, status=status.HTTP_200_OK
@@ -93,15 +99,6 @@ class UserGetToken(APIView):
             {'confirmation_code': 'Неверный код подтверждения!'},
             status=status.HTTP_400_BAD_REQUEST
         )
-
-
-    # def post(self, request):
-    #     serializer = CatSerializer(data=request.data)
-    #     if serializer.is_valid():
-    #         serializer.save()
-    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-# POST-запрос с параметрами username и confirmation_code на эндпоинт /api/v1/auth/token/, в ответе на запрос ему приходит token (JWT-токен).
 
 
 class CategoryGenreViewset(
