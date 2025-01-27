@@ -8,7 +8,6 @@ from django.shortcuts import get_object_or_404, render
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import (filters, generics, mixins, serializers, status,
                             viewsets)
-# from rest_framework.authtoken.models import Token
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import (AllowAny, IsAdminUser, IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
