@@ -1,4 +1,6 @@
 from pprint import pprint
+from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.db.models import Avg
 from django.utils.text import slugify
 from rest_framework import serializers
@@ -47,18 +49,55 @@ class SingUpSerializer(serializers.Serializer):
 
     email = serializers.EmailField(
         required=True,
-        validators=[UniqueValidator(queryset=User.objects.all())]
+        #validators=[UniqueValidator(queryset=User.objects.all())]
     )
     username = serializers.CharField(
         required=True,
         validators=[UsernameRegexValidator(), ]
     )
 
-    def validate_username(self, value):
-        return username_me(value)
+
+    def validate(self, data):
+        username = data.get('username')
+        email = data.get('email')
+        User = get_user_model()
+
+        if username == 'me':
+            raise ValidationError({
+                'username': 'Имя пользователя "me" не разрешено.'
+            })
+            
+        if len(username) > 150:
+            raise ValidationError({
+                'username': 'Имя пользователя слишком длинное.'
+            })
+            
+        if len(email) > 150:
+            raise ValidationError({
+                'email': 'Емейл слишком длинный.'
+            })
+
+        both_exists = User.objects.filter(
+            username=username,
+            email=email
+        ).exists()
+        
+        if both_exists:
+            return data
+
+        if User.objects.filter(username=username).exists():
+            raise ValidationError({
+                'username': 'Пользователь с таким именем уже существует.'
+            })
+            
+        if User.objects.filter(email=email).exists():
+            raise ValidationError({
+                'email': 'Пользователь с таким email уже существует.'
+            })
+            
+        return data
     
-    def validate_email(self, value):
-        return len_email(value)
+    
 
 
 

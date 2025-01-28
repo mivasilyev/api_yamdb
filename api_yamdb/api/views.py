@@ -72,12 +72,22 @@ class UserSignUp(views.APIView):
         confirmation_code = random.randrange(1000, 9999)
         
         try:
-            user, _ = User.objects.get_or_create(
-                confirmation_code=confirmation_code,
-                role=ROLES[0][0],
-                username=serializer.validated_data.get('username'),
-                email=serializer.validated_data.get('email')
+            user, created = User.objects.get_or_create(
+                #confirmation_code=confirmation_code,
+                #role=ROLES[0][0],
+                username=serializer.initial_data.get('username'),
+                email=serializer.initial_data.get('email')
             )
+            a = created
+            if not created:
+                confirmation_code = user.confirmation_code
+            
+            else:
+                user.confirmation_code = confirmation_code
+                user.role = ROLES[0][0]
+                user.save()
+
+
         except IntegrityError:
             return response.Response(
                 settings.MESSAGE_EMAIL_EXISTS if
@@ -90,7 +100,7 @@ class UserSignUp(views.APIView):
             'Код токена',
             f'Код для получения токена {confirmation_code}',
             settings.DEFAULT_FROM_EMAIL,
-            [serializer.validated_data.get('email')]
+            [serializer.initial_data.get('email')]
         )
         
             
