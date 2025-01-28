@@ -32,4 +32,15 @@ def username_me(value):
         raise ValidationError(
             'Имя пользователя "me" не разрешено.'
         )
+    if len(value)>150:
+        raise ValidationError(
+            'Имя пользователя слишком длинное.'
+        )
+    return value
+
+def len_email(value):
+    if len(value)>150:
+        raise ValidationError(
+            'Емейл слишком длинный.'
+        )
     return value

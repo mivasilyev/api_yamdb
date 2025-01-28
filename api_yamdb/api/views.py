@@ -10,31 +10,57 @@ from django.db.models import Avg
 from django.shortcuts import get_object_or_404, render
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import (filters, generics, mixins, serializers, status,
-                            viewsets, views, response)
+                            viewsets, views, response, permissions)
 # from rest_framework.authtoken.models import Token
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import (AllowAny, IsAdminUser, IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
+from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 from rest_framework.settings import api_settings
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.views import APIView
 
 from api.filters import TitleManyFilters
-from api.permissions import IsAdminOrReadOnly, IsAuthorOrReadOnlyPermission
+from api.permissions import IsAdminOrReadOnly, IsAuthorOrReadOnlyPermission, IsAdmin
 from api.serializers import (
     CategorySerializer, CommentSerializer, GenreSerializer, ReviewSerializer,
-    TitleGetSerializer, TitleSerializer, UserSerializer,
-    GetTokenSerializer, SingUpSerializer)
+    TitleGetSerializer, TitleSerializer, UsersSerializer,
+    GetTokenSerializer, SingUpSerializer, PersSerializer)
 from reviews.models import Category, Comment, Genre, Review, Title, User
 from users.models import ROLES
 
 
-class UserViewSet(viewsets.ModelViewSet):
-    """Вьюсет для регистрации пользователей админом."""
+class UsersViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
-    serializer_class = SingUpSerializer
-    permission_classes = (AllowAny,)  # (IsAdminUser,)
+    serializer_class = UsersSerializer
+    permission_classes = (IsAdmin,)
+    lookup_field = 'username'
+    search_fields = ('username', )
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
+    lookup_field = 'username'
+
+    @action(
+        methods=['GET', 'PATCH'],
+        detail=False,
+        permission_classes=[permissions.IsAuthenticated]
+    )
+    def me(self, request):
+        user = request.user
+        if request.method == 'PATCH':
+            serializer = PersSerializer(
+                user, data=request.data, partial=True
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return response.Response(
+                serializer.data, status=status.HTTP_200_OK
+            )
+        serializer = PersSerializer(user)
+        return response.Response(
+            serializer.data, status=status.HTTP_200_OK
+        )
+    
 
 
 class UserSignUp(views.APIView):

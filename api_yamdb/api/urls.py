@@ -9,12 +9,12 @@ from api.views import (
     TitleViewSet,
     UserGetToken,
     UserSignUp,
-    UserViewSet
+    UsersViewSet
 )
 
 v1_router = DefaultRouter()
 
-v1_router.register(r'users', UserViewSet)
+v1_router.register(r'users', UsersViewSet)
 v1_router.register(r'genres', GenreViewSet)
 v1_router.register(r'categories', CategoryViewSet)
 v1_router.register(r'titles', TitleViewSet)

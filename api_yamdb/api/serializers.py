@@ -6,15 +6,40 @@ from rest_framework.validators import UniqueValidator
 
 from reviews.models import Category, Comment, Genre, Review, Title, User
 from reviews.validators import current_year
-from api.validators import UsernameRegexValidator, username_me
+from api.validators import UsernameRegexValidator, username_me, len_email
 
 
 
-class UserSerializer(serializers.ModelSerializer):  # удалить после отладки.
+class UsersSerializer(serializers.ModelSerializer):
+    """Сериализатор для новых юзеров."""
+
+    username = serializers.CharField(
+        required=True,
+        validators=[
+            UniqueValidator(queryset=User.objects.all()),
+            UsernameRegexValidator()
+        ]
+    )
 
     class Meta:
+        abstract = True
         model = User
-        fields = '__all__'
+        fields = (
+            'username', 'email', 'first_name',
+            'last_name', 'bio', 'role')
+    
+    def validate_username(self, value):
+        return username_me(value)
+    
+    def validate_email(self, value):
+        return len_email(value)
+
+
+class PersSerializer(UsersSerializer):
+    """Сериализатор для пользователя."""
+
+    class Meta(UsersSerializer.Meta):
+        read_only_fields = ('role',)
 
 
 class SingUpSerializer(serializers.Serializer):
@@ -31,6 +56,31 @@ class SingUpSerializer(serializers.Serializer):
 
     def validate_username(self, value):
         return username_me(value)
+    
+    def validate_email(self, value):
+        return len_email(value)
+
+
+
+class GetTokenSerializer(serializers.Serializer):
+    """Сериализатор для получения токена при регистрации."""
+
+    username = serializers.CharField(
+        required=True,
+        validators=(UsernameRegexValidator(), )
+    )
+    confirmation_code = serializers.CharField(required=True)
+
+    def validate_username(self, value):
+        return username_me(value)
+
+
+
+
+
+
+
+
 
 
 
@@ -194,31 +244,3 @@ class CommentSerializer(serializers.ModelSerializer):
         read_only_fields = ('review_id', )
 
 
-class SingUpSerializer(serializers.Serializer):
-    """Сериализатор для регистрации."""
-
-    email = serializers.EmailField(
-        required=True,
-        validators=[UniqueValidator(queryset=User.objects.all())]
-    )
-    username = serializers.CharField(
-        required=True,
-        validators=[UsernameRegexValidator(), ]
-    )
-
-    def validate_username(self, value):
-        return username_me(value)
-
-
-
-class GetTokenSerializer(serializers.Serializer):
-    """Сериализатор для получения токена при регистрации."""
-
-    username = serializers.CharField(
-        required=True,
-        validators=(UsernameRegexValidator(), )
-    )
-    confirmation_code = serializers.CharField(required=True)
-
-    #def validate_username(self, value):
-    #    return username_me(value)

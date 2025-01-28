@@ -10,11 +10,11 @@ ROLES = (
 
 
 class MyUser(AbstractUser):
-    first_name = models.CharField('Имя', max_length=150)
+    first_name = models.CharField('Имя', max_length=150, blank=True)
     email = models.CharField('Электронная почта', max_length=254)
     bio = models.TextField('Биография', blank=True)
     is_staff = models.BooleanField('Персонал', default=False)
-    role = models.CharField('Роль', max_length=9, choices=ROLES)
+    role = models.CharField('Роль', max_length=9, choices=ROLES, blank=True)
     confirmation_code = models.SmallIntegerField('Код подтверждения',
                                                  blank=True, null=True)
 
