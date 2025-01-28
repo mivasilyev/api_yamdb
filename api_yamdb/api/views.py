@@ -31,11 +31,11 @@ class UserViewSet(viewsets.ModelViewSet):
     permission_classes = (AllowAny,)  # (IsAdminUser,)
 
 
-class UserSignup(generics.CreateAPIView):
-    """Вью-класс для запросов на регистрацию новых пользователей."""
+class AdminCreatesUser(generics.CreateAPIView):
+    """Вью-класс для запросов админа на регистрацию новых пользователей."""
     queryset = User.objects.all()
     serializer_class = UserSignupSerializer
-    permission_classes = (AllowAny,)
+    permission_classes = (IsAdminUser,)
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -43,6 +43,32 @@ class UserSignup(generics.CreateAPIView):
         confirmation_code = random.randrange(1000, 9999)
         self.perform_create(serializer, confirmation_code)
         headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data,
+                        status=status.HTTP_200_OK,
+                        headers=headers)
+    
+    def perform_create(self, serializer, confirmation_code):
+        serializer.save(
+            confirmation_code=confirmation_code, role=ROLES[0][0])
+
+
+class UserSignup(AdminCreatesUser):
+    """Вью-класс для запросов на регистрацию новых пользователей."""
+    permission_classes = (AllowAny,)
+
+# class UserSignup(generics.CreateAPIView):
+#     """Вью-класс для запросов на регистрацию новых пользователей."""
+#     queryset = User.objects.all()
+#     serializer_class = UserSignupSerializer
+#     permission_classes = (AllowAny,)
+
+    def create(self, request, *args, **kwargs):
+        super().create(request, *args, **kwargs)
+        # serializer = self.get_serializer(data=request.data)
+        # serializer.is_valid(raise_exception=True)
+        # confirmation_code = random.randrange(1000, 9999)
+        # self.perform_create(serializer, confirmation_code)
+        # headers = self.get_success_headers(serializer.data)
         email = request.data['email']
         send_mail(
             subject='Подтверждение подписки на YaMDb',
