@@ -6,9 +6,9 @@ MODERATOR = 'moderator'
 ADMIN = 'admin'
 
 ROLES = (
-    ('user', 'Пользователь'),
-    ('moderator', 'Модератор'),
-    ('admin', 'Администратор'),
+    (USER, 'Пользователь'),
+    (MODERATOR, 'Модератор'),
+    (ADMIN, 'Администратор'),
 )
 
 
@@ -17,7 +17,8 @@ class MyUser(AbstractUser):
     email = models.CharField('Электронная почта', max_length=100)
     bio = models.TextField('Биография', blank=True)
     is_staff = models.BooleanField('Персонал', default=False)
-    role = models.CharField('Роль', max_length=9, choices=ROLES, default=USER)
+    role = models.CharField('Роль', max_length=9,
+                            choices=ROLES, default=ROLES[0][0])
     confirmation_code = models.SmallIntegerField('Код подтверждения',
                                                  blank=True, null=True)
 
@@ -41,12 +42,16 @@ class MyUser(AbstractUser):
 
     @property
     def is_admin(self):
-        return self.role == ADMIN or self.is_superuser or self.is_staff
-
-    @property
-    def is_user(self):
-        return self.role == USER
+        # Админ, если role=admin, is_superuser=True или is_staff=True.
+        return (self.role == ADMIN
+                or self.is_superuser is True
+                or self.is_staff is True)
 
     @property
     def is_moderator(self):
         return self.role == MODERATOR
+
+    @property
+    def is_user(self):
+        # Юзер, если не админ (вкл. суперюзера) или модератор.
+        return not self.is_admin and not self.is_moderator
