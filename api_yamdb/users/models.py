@@ -53,5 +53,4 @@ class MyUser(AbstractUser):
 
     @property
     def is_user(self):
-        # Юзер, если не админ (вкл. суперюзера) или модератор.
-        return not self.is_admin and not self.is_moderator
+        return self.role == USER
