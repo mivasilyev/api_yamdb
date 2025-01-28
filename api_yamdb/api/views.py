@@ -16,7 +16,7 @@ from rest_framework.settings import api_settings
 from rest_framework.views import APIView
 
 from api.filters import TitleManyFilters
-from api.permissions import IsAdminOrReadOnly, IsAuthorOrReadOnlyPermission
+from api.permissions import (IsAdminOrReadOnly, IsAuthorAdminModerOrReadOnly)
 from api.serializers import (
     CategorySerializer, CommentSerializer, GenreSerializer, ReviewSerializer,
     TitleGetSerializer, TitleSerializer, UserSerializer, UserSignupSerializer)
@@ -137,7 +137,8 @@ class TitleViewSet(viewsets.ModelViewSet):
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
-    permission_classes = (IsAuthorOrReadOnlyPermission,)
+    permission_classes = (IsAuthorAdminModerOrReadOnly,)
+    http_method_names = ('get', 'post', 'patch', 'delete')
 
     def get_title(self):
         return get_object_or_404(Title, id=self.kwargs.get('title_id'))
@@ -174,7 +175,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
-    permission_classes = (IsAuthorOrReadOnlyPermission,)
+    permission_classes = (IsAuthorAdminModerOrReadOnly,)
+    http_method_names = ('get', 'post', 'patch', 'delete')
 
     def get_review(self):
         return get_object_or_404(Review, id=self.kwargs.get('review_id'))
