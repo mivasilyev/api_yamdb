@@ -1,121 +1,127 @@
 import random
-from pprint import pprint
 
 import jwt
+from django.conf import settings
+from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
+from django.db import IntegrityError
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404, render
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import (filters, generics, mixins, serializers, status,
-                            viewsets)
+                            viewsets, views, response, permissions)
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import (AllowAny, IsAdminUser, IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
+from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 from rest_framework.settings import api_settings
+from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.views import APIView
 
 from api.filters import TitleManyFilters
-from api.permissions import IsAdminOrReadOnly, IsAuthorOrReadOnlyPermission
+from api.permissions import IsAdminOrReadOnly, IsAuthorOrReadOnlyPermission, IsAdmin
 from api.serializers import (
     CategorySerializer, CommentSerializer, GenreSerializer, ReviewSerializer,
-    TitleGetSerializer, TitleSerializer, UserSerializer, UserSignupSerializer)
+    TitleGetSerializer, TitleSerializer, UsersSerializer,
+    GetTokenSerializer, SingUpSerializer, PersSerializer)
 from reviews.models import Category, Comment, Genre, Review, Title, User
 from users.models import ROLES
 
 
-class UserViewSet(viewsets.ModelViewSet):
-    """Вьюсет для регистрации пользователей админом."""
+class UsersViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
-    serializer_class = UserSignupSerializer
-    permission_classes = (AllowAny,)  # (IsAdminUser,)
+    serializer_class = UsersSerializer
+    permission_classes = (IsAdmin,)
+    lookup_field = 'username'
+    search_fields = ('username', )
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
+    lookup_field = 'username'
+
+    @action(
+        methods=['GET', 'PATCH'],
+        detail=False,
+        permission_classes=[permissions.IsAuthenticated]
+    )
+    def me(self, request):
+        user = request.user
+        if request.method == 'PATCH':
+            serializer = PersSerializer(
+                user, data=request.data, partial=True
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return response.Response(
+                serializer.data, status=status.HTTP_200_OK
+            )
+        serializer = PersSerializer(user)
+        return response.Response(
+            serializer.data, status=status.HTTP_200_OK
+        )
 
 
-class AdminCreatesUser(generics.CreateAPIView):
-    """Вью-класс для запросов админа на регистрацию новых пользователей."""
-    queryset = User.objects.all()
-    serializer_class = UserSignupSerializer
-    permission_classes = (IsAdminUser,)
+class UserSignUp(views.APIView):
+    """Функция регистрации новых пользователей."""
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+    serializer_class = SingUpSerializer
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         confirmation_code = random.randrange(1000, 9999)
-        self.perform_create(serializer, confirmation_code)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data,
-                        status=status.HTTP_200_OK,
-                        headers=headers)
-    
-    def perform_create(self, serializer, confirmation_code):
-        serializer.save(
-            confirmation_code=confirmation_code, role=ROLES[0][0])
-
-
-class UserSignup(AdminCreatesUser):
-    """Вью-класс для запросов на регистрацию новых пользователей."""
-    permission_classes = (AllowAny,)
-
-# class UserSignup(generics.CreateAPIView):
-#     """Вью-класс для запросов на регистрацию новых пользователей."""
-#     queryset = User.objects.all()
-#     serializer_class = UserSignupSerializer
-#     permission_classes = (AllowAny,)
-
-    def create(self, request, *args, **kwargs):
-        super().create(request, *args, **kwargs)
-        # serializer = self.get_serializer(data=request.data)
-        # serializer.is_valid(raise_exception=True)
-        # confirmation_code = random.randrange(1000, 9999)
-        # self.perform_create(serializer, confirmation_code)
-        # headers = self.get_success_headers(serializer.data)
-        email = request.data['email']
+        
+        try:
+            user, _ = User.objects.get_or_create(
+                confirmation_code=confirmation_code,
+                role=ROLES[0][0],
+                username=serializer.validated_data.get('username'),
+                email=serializer.validated_data.get('email')
+            )
+        except IntegrityError:
+            return response.Response(
+                settings.MESSAGE_EMAIL_EXISTS if
+                User.objects.filter(username='username').exists()
+                else settings.MESSAGE_USERNAME_EXISTS,
+                status.HTTP_400_BAD_REQUEST
+            )
+        
         send_mail(
-            subject='Подтверждение подписки на YaMDb',
-            message='Для завершения регистрации пользователя на YaMDb и '
-            f'получения токена ваш код {confirmation_code}. Отправьте его POST'
-            '-запросом на /api/v1/auth/token/ с параметрами '
-            'username и confirmation_code.',
-            from_email='from@api_yamdb.ru',
-            recipient_list=[email]
+            'Код токена',
+            f'Код для получения токена {confirmation_code}',
+            settings.DEFAULT_FROM_EMAIL,
+            [serializer.validated_data.get('email')]
         )
-        return Response(serializer.data,
-                        status=status.HTTP_200_OK,
-                        headers=headers)
-
-    def perform_create(self, serializer, confirmation_code):
-        serializer.save(
-            confirmation_code=confirmation_code,
-            role=ROLES[0][0])
+        
+            
+        return response.Response(
+            serializer.data, status=status.HTTP_200_OK
+        )
 
 
 class UserGetToken(APIView):
     """Вью-класс получения токена по username и confirmation_code."""
-    # queryset = User.objects.all()
-    # serializer_class = UserSignupSerializer
+
     permission_classes = (AllowAny,)
 
     def post(self, request):
-        # Проверяем наличие в базе username и confirmation_code.
-        serializer = UserSignupSerializer(data=request.data)
-        username = request.data['username']
-        confirmation_code = request.data['confirmation_code']
-        user = get_object_or_404(User, username=username)
-        if user.confirmation_code == confirmation_code:
-            # здесь делаем токен и отправляем его в ответе.
-            jwt_token = user.token
-            return Response({'Token': jwt_token})
-        raise serializers.ValidationError(
-            'Пользователя с такими данными в системе не зарегистрировано.'
-        )
+        """Функция получения токена при регистрации."""
 
-    # def post(self, request):
-    #     serializer = CatSerializer(data=request.data)
-    #     if serializer.is_valid():
-    #         serializer.save()
-    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-# POST-запрос с параметрами username и confirmation_code на эндпоинт /api/v1/auth/token/, в ответе на запрос ему приходит token (JWT-токен).
+        serializer = GetTokenSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        username = serializer.validated_data.get('username')
+        user = get_object_or_404(User, username=username)
+        confirmation_code = serializer.validated_data.get(
+            'confirmation_code'
+        )
+        if user.confirmation_code == int(confirmation_code):
+            token = AccessToken.for_user(user)
+            return Response(
+                {'token': str(token)}, status=status.HTTP_200_OK
+            )
+        return Response(
+            {'confirmation_code': 'Неверный код подтверждения!'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
 
 class CategoryGenreViewset(

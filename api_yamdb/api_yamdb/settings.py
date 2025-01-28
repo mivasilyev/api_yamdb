@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from datetime import timedelta
@@ -114,18 +115,36 @@ AUTH_USER_MODEL = 'users.MyUser'
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+        'rest_framework.permissions.AllowAny',
     ],
-
-    'DEFAULT_AUTHENTICATION_CLASSES': [
+    'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
     ],
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'DEFAULT_PAGINATION_CLASS':
+        'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
 }
+
 
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=35),
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
+
+EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
+DEFAULT_FROM_EMAIL = 'black.yamdb@example.com'
+
+
+LENG_SLUG = 50
+LENG_MAX = 256
+LENG_DATA_USER = 150
+LENG_EMAIL = 254
+LENG_CUT = 30
+
+MESSAGE_EMAIL_EXISTS = 'Этот email уже занят'
+MESSAGE_USERNAME_EXISTS = 'Это имя уже занято'
