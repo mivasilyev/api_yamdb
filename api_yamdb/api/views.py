@@ -203,7 +203,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
             raise serializers.ValidationError(
                 'Вы не можете дважды дать отзыв на одно произведение.'
             )
-        serializer.save(title_id=self.get_title(), author=self.request.user)
+        serializer.save(title=self.get_title(), author=self.request.user)
         # После записи отзыва обновляем рейтинг.
         self.update_rating()
 

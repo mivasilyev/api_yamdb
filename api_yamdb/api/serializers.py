@@ -199,7 +199,7 @@ class TitleSerializer(serializers.ModelSerializer):
 class ReviewSerializer(serializers.ModelSerializer):
     """Отзывы."""
 
-    title_id = serializers.SlugRelatedField(
+    title = serializers.SlugRelatedField(
         read_only=True,
         slug_field='name'
     )
@@ -210,7 +210,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Review
-        fields = ('id', 'title_id', 'text', 'author', 'score', 'pub_date')  # 'rating'
+        fields = ('id', 'title', 'text', 'author', 'score', 'pub_date')  # 'rating'
 
     # def validate_title_id(self, value):
     #     author = self.context['request'].user
