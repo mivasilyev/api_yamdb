@@ -192,8 +192,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Review
-        fields = ('id', 'title', 'text', 'author', 'score', 'pub_date')  # 'rating'
-
+        fields = ('id', 'title', 'text', 'author', 'score', 'pub_date')
 
     def validate_score(self, value):
         """Проверка на корректность оценки."""

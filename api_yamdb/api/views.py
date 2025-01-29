@@ -71,12 +71,9 @@ class UserSignUp(views.APIView):
 
         try:
             user, created = User.objects.get_or_create(
-                # confirmation_code=confirmation_code,
-                # role=ROLES[0][0],
                 username=serializer.initial_data.get('username'),
                 email=serializer.initial_data.get('email')
             )
-            a = created
             if not created:
                 confirmation_code = user.confirmation_code
 
