@@ -14,11 +14,11 @@ ROLES = (
 
 class MyUser(AbstractUser):
     first_name = models.CharField('Имя', max_length=150, blank=True)
-    email = models.CharField('Электронная почта', max_length=254)
+    email = models.CharField('Электронная почта', max_length=254, unique=True)
     bio = models.TextField('Биография', blank=True)
     is_staff = models.BooleanField('Персонал', default=False)
     role = models.CharField('Роль', max_length=9,
-                            choices=ROLES, default=ROLES[0][0], blank=True)
+                            choices=ROLES, default=USER)
     confirmation_code = models.SmallIntegerField('Код подтверждения',
                                                  blank=True, null=True)
 
@@ -42,7 +42,6 @@ class MyUser(AbstractUser):
 
     @property
     def is_admin(self):
-        # Админ, если role=admin, is_superuser=True или is_staff=True.
         return (self.role == ADMIN
                 or self.is_superuser is True
                 or self.is_staff is True)

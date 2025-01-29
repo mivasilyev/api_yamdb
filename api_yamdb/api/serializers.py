@@ -11,7 +11,6 @@ from reviews.validators import current_year
 from api.validators import UsernameRegexValidator, username_me, len_email
 
 
-
 class UsersSerializer(serializers.ModelSerializer):
     """Сериализатор для новых юзеров."""
 
@@ -29,10 +28,10 @@ class UsersSerializer(serializers.ModelSerializer):
         fields = (
             'username', 'email', 'first_name',
             'last_name', 'bio', 'role')
-    
+
     def validate_username(self, value):
         return username_me(value)
-    
+
     def validate_email(self, value):
         return len_email(value)
 
@@ -49,13 +48,12 @@ class SingUpSerializer(serializers.Serializer):
 
     email = serializers.EmailField(
         required=True,
-        #validators=[UniqueValidator(queryset=User.objects.all())]
+        # validators=[UniqueValidator(queryset=User.objects.all())]
     )
     username = serializers.CharField(
         required=True,
         validators=[UsernameRegexValidator(), ]
     )
-
 
     def validate(self, data):
         username = data.get('username')
@@ -66,12 +64,12 @@ class SingUpSerializer(serializers.Serializer):
             raise ValidationError({
                 'username': 'Имя пользователя "me" не разрешено.'
             })
-            
+
         if len(username) > 150:
             raise ValidationError({
                 'username': 'Имя пользователя слишком длинное.'
             })
-            
+
         if len(email) > 150:
             raise ValidationError({
                 'email': 'Емейл слишком длинный.'
@@ -81,7 +79,7 @@ class SingUpSerializer(serializers.Serializer):
             username=username,
             email=email
         ).exists()
-        
+
         if both_exists:
             return data
 
@@ -89,16 +87,13 @@ class SingUpSerializer(serializers.Serializer):
             raise ValidationError({
                 'username': 'Пользователь с таким именем уже существует.'
             })
-            
+
         if User.objects.filter(email=email).exists():
             raise ValidationError({
                 'email': 'Пользователь с таким email уже существует.'
             })
-            
-        return data
-    
-    
 
+        return data
 
 
 class GetTokenSerializer(serializers.Serializer):
@@ -112,15 +107,6 @@ class GetTokenSerializer(serializers.Serializer):
 
     def validate_username(self, value):
         return username_me(value)
-
-
-
-
-
-
-
-
-
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -278,5 +264,3 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
         fields = ('id', 'author', 'review_id', 'text', 'pub_date')
         read_only_fields = ('review_id', )
-
-

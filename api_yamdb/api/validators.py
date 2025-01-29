@@ -9,7 +9,8 @@ from rest_framework.validators import UniqueValidator
 
 from reviews.models import (Category, Comment, Genre,
                             Review, Title, User)
-#from reviews.validators import UsernameRegexValidator
+# from reviews.validators import UsernameRegexValidator
+
 
 class UsernameRegexValidator(UnicodeUsernameValidator):
     """Валидация имени пользователя."""
@@ -26,26 +27,26 @@ class UsernameRegexValidator(UnicodeUsernameValidator):
         'required': 'Поле не может быть пустым',
     }
 
+
 def username_me(value):
     """Проверка имени пользователя (me недопустимое имя)."""
     if value == 'me':
         raise ValidationError(
             'Имя пользователя "me" не разрешено.'
         )
-    if len(value)>150:
+    if len(value) > 150:
         raise ValidationError(
             'Имя пользователя слишком длинное.'
         )
     return value
 
+
 def len_email(value):
-    if len(value)>150:
+    if len(value) > 150:
         raise ValidationError(
             'Емейл слишком длинный.'
         )
     return value
-
-
 
 
 ###############

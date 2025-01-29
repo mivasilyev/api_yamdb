@@ -26,7 +26,7 @@ from api.serializers import (
     CategorySerializer, CommentSerializer, GenreSerializer, ReviewSerializer,
     TitleGetSerializer, TitleSerializer, UsersSerializer,
     GetTokenSerializer, SingUpSerializer, PersSerializer)
-from reviews.models import Category, Comment, Genre, Review, Title, User
+from reviews.models import Category, Genre, Review, Title, User
 from users.models import ROLES
 
 
@@ -37,6 +37,7 @@ class UsersViewSet(viewsets.ModelViewSet):
     lookup_field = 'username'
     search_fields = ('username', )
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
+    http_method_names = ('get', 'post', 'patch', 'delete')
     lookup_field = 'username'
 
     @action(
@@ -70,23 +71,22 @@ class UserSignUp(views.APIView):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
         confirmation_code = random.randrange(1000, 9999)
-        
+
         try:
             user, created = User.objects.get_or_create(
-                #confirmation_code=confirmation_code,
-                #role=ROLES[0][0],
+                # confirmation_code=confirmation_code,
+                # role=ROLES[0][0],
                 username=serializer.initial_data.get('username'),
                 email=serializer.initial_data.get('email')
             )
             a = created
             if not created:
                 confirmation_code = user.confirmation_code
-            
+
             else:
                 user.confirmation_code = confirmation_code
                 user.role = ROLES[0][0]
                 user.save()
-
 
         except IntegrityError:
             return response.Response(
@@ -95,15 +95,14 @@ class UserSignUp(views.APIView):
                 else settings.MESSAGE_USERNAME_EXISTS,
                 status.HTTP_400_BAD_REQUEST
             )
-        
+
         send_mail(
             'Код токена',
             f'Код для получения токена {confirmation_code}',
             settings.DEFAULT_FROM_EMAIL,
             [serializer.initial_data.get('email')]
         )
-        
-            
+
         return response.Response(
             serializer.data, status=status.HTTP_200_OK
         )
