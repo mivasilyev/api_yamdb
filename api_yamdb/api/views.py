@@ -1,21 +1,16 @@
 import random
 
-import jwt
 from django.conf import settings
-from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.db import IntegrityError
 from django.db.models import Avg
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import (filters, generics, mixins, serializers, status,
+from rest_framework import (filters, mixins, serializers, status,
                             viewsets, views, response, permissions)
-from rest_framework.pagination import LimitOffsetPagination
-from rest_framework.permissions import (AllowAny, IsAdminUser, IsAuthenticated,
-                                        IsAuthenticatedOrReadOnly)
-from rest_framework.decorators import action, api_view
+from rest_framework.permissions import AllowAny
+from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.settings import api_settings
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.views import APIView
 
@@ -31,6 +26,8 @@ from users.models import ROLES
 
 
 class UsersViewSet(viewsets.ModelViewSet):
+    """Функция работы с пользователями."""
+
     queryset = User.objects.all()
     serializer_class = UsersSerializer
     permission_classes = (IsAdmin,)
@@ -203,7 +200,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
                 'Вы не можете дважды дать отзыв на одно произведение.'
             )
         serializer.save(title=self.get_title(), author=self.request.user)
-        # После записи отзыва обновляем рейтинг.
         self.update_rating()
 
     def perform_update(self, serializer):
@@ -228,19 +224,3 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user, review_id=self.get_review())
-
-# /titles/{title_id}/reviews/:
-#  GET: Получение списка всех отзывов, доступно без токена. 200/404
-#  POST: Добавление нового отзыва, аутентифицированные. 201/400/401/404
-# /titles/{title_id}/reviews/{review_id}/:
-#  GET: Получение отзыва по id, доступно без токена. 200/404
-#  PATCH: Обновление отзыва по id, по токену. 200/400/401/403/404
-#  DELETE: Удалить отзыв по id, по токену. 204/401/403/404
-
-# /titles/{title_id}/reviews/{review_id}/comments/:
-#  GET: Получение списка всех комментариев к отзыву, без токена. 200/404
-#  POST: Добавление комментария к отзыву, по токену. 201/400/401/404
-# /titles/{title_id}/reviews/{review_id}/comments/{comment_id}/:
-#  GET: Получение комментария к отзыву, без токена. 200/404
-#  PATCH: Обновление комментария к отзыву, аутентифицир. 200/400/401/403/404
-#  DELETE: Удаление комментария к отзыву, автор, модер., админ. 204/401/403/404

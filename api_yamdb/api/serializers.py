@@ -1,8 +1,5 @@
-from pprint import pprint
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
-from django.db.models import Avg
-from django.utils.text import slugify
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
@@ -48,7 +45,6 @@ class SingUpSerializer(serializers.Serializer):
 
     email = serializers.EmailField(
         required=True,
-        # validators=[UniqueValidator(queryset=User.objects.all())]
     )
     username = serializers.CharField(
         required=True,
@@ -198,15 +194,6 @@ class ReviewSerializer(serializers.ModelSerializer):
         model = Review
         fields = ('id', 'title', 'text', 'author', 'score', 'pub_date')  # 'rating'
 
-    # def validate_title_id(self, value):
-    #     author = self.context['request'].user
-    #     if author == self.context['request'].user:
-    #     # if Review.objects.filter(user=author, title_id=value).exists():
-    #         raise serializers.ValidationError(  # value)
-    #             'Вы не можете дважды дать отзыв на одно произведение.'
-    #         )
-    #     return value
-# Как я понял, сериализатор не проверяет автоматически переданные поля.
 
     def validate_score(self, value):
         """Проверка на корректность оценки."""
@@ -216,45 +203,10 @@ class ReviewSerializer(serializers.ModelSerializer):
             )
         return value
 
-#     def validate_following(self, value):
-#         user = self.context['request'].user
-#         if user == value:
-#             raise serializers.ValidationError(
-#                 'Вы не можете подписаться на самого себя!'
-#             )
-#         if Follow.objects.filter(user=user, following=value).exists():
-#             raise serializers.ValidationError(
-#                 'Вы уже подписаны на этого пользователя.'
-#             )
-#         return value
-
-# class CommentSerializer(serializers.ModelSerializer):
-#     author = serializers.SlugRelatedField(
-#         read_only=True, slug_field='username'
-#     )
-
-#     class Meta:
-#         model = Comment
-#         fields = ('id', 'author', 'text', 'created', 'post')
-#         read_only_fields = ('post',)
-
-    # def create(self, validated_data):
-
-    #     Review.objects.create(**validated_data)
-    #     title_id = self.context['request'].title_id
-    #     updated_rating = Review.objects.filter(
-    #         title_id=title_id
-    #     ).aggregate(avg_rating=Avg('score'), default=None)
-    #     Title.objects.update(rating=int(updated_rating))
-
 
 class CommentSerializer(serializers.ModelSerializer):
     """Комментарии к отзывам."""
 
-    # review_id = serializers.SlugRelatedField(
-    #     read_only=True,
-    #     slug_field='text'
-    # )
     author = serializers.SlugRelatedField(
         read_only=True,
         slug_field='username'
