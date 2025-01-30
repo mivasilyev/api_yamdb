@@ -20,7 +20,8 @@ from api.permissions import (IsAdminOrReadOnly, IsAuthorAdminModerOrReadOnly,
 from api.serializers import (
     CategorySerializer, CommentSerializer, GenreSerializer, ReviewSerializer,
     TitleGetSerializer, TitleSerializer, UsersSerializer,
-    GetTokenSerializer, SingUpSerializer, PersSerializer)
+    GetTokenSerializer, SingUpSerializer)
+from api_yamdb.constants import MESSAGE_EMAIL_EXISTS, MESSAGE_USERNAME_EXISTS
 from reviews.models import Category, Genre, Review, Title, User
 from users.models import ROLES
 
@@ -32,10 +33,9 @@ class UsersViewSet(viewsets.ModelViewSet):
     serializer_class = UsersSerializer
     permission_classes = (IsAdmin,)
     lookup_field = 'username'
-    search_fields = ('username', )
+    search_fields = ('username',)
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     http_method_names = ('get', 'post', 'patch', 'delete')
-    lookup_field = 'username'
 
     @action(
         methods=['GET', 'PATCH'],
@@ -45,15 +45,17 @@ class UsersViewSet(viewsets.ModelViewSet):
     def me(self, request):
         user = request.user
         if request.method == 'PATCH':
-            serializer = PersSerializer(
-                user, data=request.data, partial=True
+            data = request.data.copy()
+            data['role'] = user.role  # Сохраняем текущую роль пользователя
+            serializer = UsersSerializer(
+                user, data=data, partial=True
             )
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return response.Response(
                 serializer.data, status=status.HTTP_200_OK
             )
-        serializer = PersSerializer(user)
+        serializer = UsersSerializer(user)
         return response.Response(
             serializer.data, status=status.HTTP_200_OK
         )
@@ -84,9 +86,9 @@ class UserSignUp(views.APIView):
 
         except IntegrityError:
             return response.Response(
-                settings.MESSAGE_EMAIL_EXISTS if
+                MESSAGE_EMAIL_EXISTS if
                 User.objects.filter(username='username').exists()
-                else settings.MESSAGE_USERNAME_EXISTS,
+                else MESSAGE_USERNAME_EXISTS,
                 status.HTTP_400_BAD_REQUEST
             )
 

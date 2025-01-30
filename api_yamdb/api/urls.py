@@ -14,10 +14,10 @@ from api.views import (
 
 v1_router = DefaultRouter()
 
-v1_router.register(r'users', UsersViewSet)
-v1_router.register(r'genres', GenreViewSet)
-v1_router.register(r'categories', CategoryViewSet)
-v1_router.register(r'titles', TitleViewSet)
+v1_router.register('users', UsersViewSet)
+v1_router.register('genres', GenreViewSet)
+v1_router.register('categories', CategoryViewSet)
+v1_router.register('titles', TitleViewSet)
 v1_router.register(
     r'titles/(?P<title_id>\d+)/reviews/(?P<review_id>\d+)/comments',
     CommentViewSet,
@@ -30,7 +30,7 @@ v1_router.register(
 )
 
 urlpatterns = [
-    path('v1/auth/signup/', UserSignUp.as_view()),
-    path('v1/auth/token/', UserGetToken.as_view()),
-    path('v1/', include(v1_router.urls)),
+    path('auth/signup/', UserSignUp.as_view()),
+    path('auth/token/', UserGetToken.as_view()),
+    path('', include(v1_router.urls)),
 ]

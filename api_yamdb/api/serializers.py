@@ -3,9 +3,10 @@ from django.core.exceptions import ValidationError
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
+from api.validators import UsernameRegexValidator, username_test
 from reviews.models import Category, Comment, Genre, Review, Title, User
 from reviews.validators import current_year
-from api.validators import UsernameRegexValidator, username_me, len_email
+from api_yamdb.constants import FORBIDDEN_NAME, MAX_LENTH
 
 
 class UsersSerializer(serializers.ModelSerializer):
@@ -27,17 +28,14 @@ class UsersSerializer(serializers.ModelSerializer):
             'last_name', 'bio', 'role')
 
     def validate_username(self, value):
-        return username_me(value)
-
-    def validate_email(self, value):
-        return len_email(value)
+        return username_test(value)
 
 
-class PersSerializer(UsersSerializer):
-    """Сериализатор для пользователя."""
+#class PersSerializer(UsersSerializer):
+#    """Сериализатор для пользователя."""
 
-    class Meta(UsersSerializer.Meta):
-        read_only_fields = ('role',)
+#    class Meta(UsersSerializer.Meta):
+#        read_only_fields = ('role',)
 
 
 class SingUpSerializer(serializers.Serializer):
@@ -56,12 +54,12 @@ class SingUpSerializer(serializers.Serializer):
         email = data.get('email')
         User = get_user_model()
 
-        if username == 'me':
+        if username == FORBIDDEN_NAME:
             raise ValidationError({
-                'username': 'Имя пользователя "me" не разрешено.'
+                'username': f'Имя пользователя {FORBIDDEN_NAME} не разрешено.'
             })
 
-        if len(username) > 150:
+        if len(username) > MAX_LENTH:
             raise ValidationError({
                 'username': 'Имя пользователя слишком длинное.'
             })
@@ -102,22 +100,11 @@ class GetTokenSerializer(serializers.Serializer):
     confirmation_code = serializers.CharField(required=True)
 
     def validate_username(self, value):
-        return username_me(value)
+        return username_test(value)
 
 
 class CategorySerializer(serializers.ModelSerializer):
     """Категории."""
-
-    slug = serializers.SlugField(
-        max_length=50,
-        required=True,
-        validators=[
-            UniqueValidator(
-                queryset=Category.objects.all(),
-                message='Такой slug уже есть.'
-            )
-        ]
-    )
 
     class Meta:
         model = Category
@@ -126,17 +113,6 @@ class CategorySerializer(serializers.ModelSerializer):
 
 class GenreSerializer(serializers.ModelSerializer):
     """Жанры."""
-
-    slug = serializers.SlugField(
-        max_length=50,
-        required=True,
-        validators=[
-            UniqueValidator(
-                queryset=Genre.objects.all(),
-                message='Такой slug уже есть.'
-            )
-        ]
-    )
 
     class Meta:
         model = Genre
