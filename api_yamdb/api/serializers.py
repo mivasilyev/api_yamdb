@@ -178,10 +178,6 @@ class TitleSerializer(serializers.ModelSerializer):
 class ReviewSerializer(serializers.ModelSerializer):
     """Отзывы."""
 
-    title = serializers.SlugRelatedField(
-        read_only=True,
-        slug_field='name'
-    )
     author = serializers.SlugRelatedField(
         read_only=True,
         slug_field='username'
@@ -189,13 +185,15 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Review
-        fields = ('id', 'title', 'text', 'author', 'score', 'pub_date')
+        fields = ('id', 'text', 'author', 'score', 'pub_date')
 
     def validate_score(self, value):
         """Проверка на корректность оценки."""
-        if not (1 <= value <= 10) or not isinstance(value, int):
+        if (not (MIN_SCORE <= value <= MAX_SCORE)
+                or not isinstance(value, int)):
             raise serializers.ValidationError(
-                'Поставьте оценку целым числом от 1 до 10.'
+                'Поставьте оценку целым числом от '
+                f'{MIN_SCORE} до {MAX_SCORE}.'
             )
         return value
 
@@ -210,5 +208,4 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ('id', 'author', 'review_id', 'text', 'pub_date')
-        read_only_fields = ('review_id', )
+        fields = ('id', 'text', 'author', 'pub_date')

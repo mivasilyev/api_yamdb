@@ -11,3 +11,7 @@ LENG_CUT = 30
 
 MESSAGE_EMAIL_EXISTS = 'Этот email уже занят'
 MESSAGE_USERNAME_EXISTS = 'Это имя уже занято'
+
+# Ограничения на оценку произведения.
+MIN_SCORE = 1
+MAX_SCORE = 10
