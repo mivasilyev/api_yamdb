@@ -3,6 +3,7 @@ from django.core.validators import (
     MaxValueValidator, MinValueValidator, RegexValidator)
 from django.db import models
 
+from api_yamdb.constants import MAX_SCORE, MIN_SCORE
 from reviews.validators import current_year
 
 User = get_user_model()
@@ -62,7 +63,10 @@ class Title(models.Model):
         blank=True,
         null=True,
         verbose_name='Рейтинг',
-        validators=[MinValueValidator(1), MaxValueValidator(10)]
+        validators=[
+            MinValueValidator(MIN_SCORE),
+            MaxValueValidator(MAX_SCORE)
+        ]
     )
     description = models.TextField('Описание', null=True, blank=True,
                                    help_text='Опишите произведение')
@@ -117,10 +121,13 @@ class Review(models.Model):
     )
     score = models.PositiveIntegerField(
         verbose_name='Оценка',
-        help_text=('Оцените произведение в баллах от 1 до 10'
-                   ', где 10 - наивысшая оценка.'),
-        # Может принять значения от одного до десяти.
-        validators=[MinValueValidator(1), MaxValueValidator(10)]
+        help_text=(
+            f'Оцените произведение в баллах от {MIN_SCORE} до {MAX_SCORE}, '
+            f'где {MAX_SCORE} - наивысшая оценка.'),
+        validators=[
+            MinValueValidator(MIN_SCORE),
+            MaxValueValidator(MAX_SCORE)
+        ]
     )
     pub_date = models.DateTimeField(auto_now_add=True)
 
@@ -128,7 +135,6 @@ class Review(models.Model):
         verbose_name = 'отзыв'
         verbose_name_plural = 'Отзывы'
         constraints = [
-            # На произведение пользователь может оставить только один отзыв.
             models.UniqueConstraint(
                 fields=['title_id', 'author'],
                 name='one_review_per_author'
@@ -165,40 +171,3 @@ class Comment(models.Model):
 
     def __str__(self):
         return self.text
-
-
-# class Score(models.Model):
-#     """Модель рейтинга произведения."""
-
-#     title_id = models.OneToOneField(
-#         Title,
-#         on_delete=models.CASCADE
-#     )
-#     rating = models.SmallIntegerField(choices=DEFAULT_CHOICES)
-
-#     class Meta:
-#         constraints = [
-#             # На произведение пользователь может оставить только один отзыв.
-#             models.UniqueConstraint(
-#                 fields=['title_id', 'author'],
-#                 name='one_review_per_author'
-#             )
-#         ]
-
-# class Post(models.Model):
-#     school_name = models.CharField(max_length=200, default='')
-#     country = models.CharField(max_length=200, default='KZ')
-#     city = models.CharField(max_length=200, default='')
-#     content = models.TextField()
-#     website = models.CharField(max_length=200, default='')
-#     your_email = models.EmailField(default='')
-#     created_at = models.DateTimeField(auto_now_add=True)
-#     updated_at = models.DateTimeField(auto_now=True)
-#     author = models.ForeignKey(User, on_delete=models.CASCADE)
-
-#     def rating(self):
-#         comments = self.comments.all()
-#         rating = 0
-#         for i in comments:
-#              rating = rating + i.score
-#         return rating/len(comments)

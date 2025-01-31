@@ -1,14 +1,13 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-
 from .models import MyUser
 
-# Добавляем поле с биографией
-# к стандартному набору полей (fieldsets) пользователя в админке.
-UserAdmin.fieldsets += (
-    # Добавляем кортеж, где первый элемент — это название раздела в админке, а
-    # второй — словарь, где под ключом fields можно указать нужные поля.
-    ('Extra Fields', {'fields': ('bio', 'role',)}),
-)
-# Регистрируем модель в админке:
-admin.site.register(MyUser, UserAdmin)
+class CustomUserAdmin(UserAdmin):
+    fieldsets = UserAdmin.fieldsets + (
+        ('Extra Fields', {'fields': ('bio', 'role',)}),
+    )
+    list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff', 'role')
+    list_editable = ('role',)
+    list_filter = UserAdmin.list_filter + ('role',)
+
+admin.site.register(MyUser, CustomUserAdmin)

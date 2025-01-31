@@ -1,21 +1,11 @@
-import random
-
-import jwt
-from django.conf import settings
-from django.contrib.auth.tokens import default_token_generator
-from django.core.mail import send_mail
-from django.db import IntegrityError
 from django.db.models import Avg
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import (filters, generics, mixins, serializers, status,
+from rest_framework import (filters, mixins, serializers, status,
                             viewsets, views, response, permissions)
-from rest_framework.pagination import LimitOffsetPagination
-from rest_framework.permissions import (AllowAny, IsAdminUser, IsAuthenticated,
-                                        IsAuthenticatedOrReadOnly)
-from rest_framework.decorators import action, api_view
+from rest_framework.permissions import AllowAny
+from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.settings import api_settings
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.views import APIView
 
@@ -25,20 +15,20 @@ from api.permissions import (IsAdminOrReadOnly, IsAuthorAdminModerOrReadOnly,
 from api.serializers import (
     CategorySerializer, CommentSerializer, GenreSerializer, ReviewSerializer,
     TitleGetSerializer, TitleSerializer, UsersSerializer,
-    GetTokenSerializer, SingUpSerializer, PersSerializer)
+    GetTokenSerializer, SingUpSerializer)
 from reviews.models import Category, Genre, Review, Title, User
-from users.models import ROLES
 
 
 class UsersViewSet(viewsets.ModelViewSet):
+    """Функция работы с пользователями."""
+
     queryset = User.objects.all()
     serializer_class = UsersSerializer
     permission_classes = (IsAdmin,)
     lookup_field = 'username'
-    search_fields = ('username', )
+    search_fields = ('username',)
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     http_method_names = ('get', 'post', 'patch', 'delete')
-    lookup_field = 'username'
 
     @action(
         methods=['GET', 'PATCH'],
@@ -48,15 +38,17 @@ class UsersViewSet(viewsets.ModelViewSet):
     def me(self, request):
         user = request.user
         if request.method == 'PATCH':
-            serializer = PersSerializer(
-                user, data=request.data, partial=True
+            data = request.data.copy()
+            data['role'] = user.role
+            serializer = UsersSerializer(
+                user, data=data, partial=True
             )
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return response.Response(
                 serializer.data, status=status.HTTP_200_OK
             )
-        serializer = PersSerializer(user)
+        serializer = UsersSerializer(user)
         return response.Response(
             serializer.data, status=status.HTTP_200_OK
         )
@@ -70,41 +62,10 @@ class UserSignUp(views.APIView):
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
-        confirmation_code = random.randrange(1000, 9999)
-
-        try:
-            user, created = User.objects.get_or_create(
-                # confirmation_code=confirmation_code,
-                # role=ROLES[0][0],
-                username=serializer.initial_data.get('username'),
-                email=serializer.initial_data.get('email')
-            )
-            a = created
-            if not created:
-                confirmation_code = user.confirmation_code
-
-            else:
-                user.confirmation_code = confirmation_code
-                user.role = ROLES[0][0]
-                user.save()
-
-        except IntegrityError:
-            return response.Response(
-                settings.MESSAGE_EMAIL_EXISTS if
-                User.objects.filter(username='username').exists()
-                else settings.MESSAGE_USERNAME_EXISTS,
-                status.HTTP_400_BAD_REQUEST
-            )
-
-        send_mail(
-            'Код токена',
-            f'Код для получения токена {confirmation_code}',
-            settings.DEFAULT_FROM_EMAIL,
-            [serializer.initial_data.get('email')]
-        )
-
+        serializer.save()
         return response.Response(
-            serializer.data, status=status.HTTP_200_OK
+            serializer.data,
+            status=status.HTTP_200_OK
         )
 
 
@@ -203,7 +164,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
                 'Вы не можете дважды дать отзыв на одно произведение.'
             )
         serializer.save(title=self.get_title(), author=self.request.user)
-        # После записи отзыва обновляем рейтинг.
         self.update_rating()
 
     def perform_update(self, serializer):
@@ -228,19 +188,3 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user, review_id=self.get_review())
-
-# /titles/{title_id}/reviews/:
-#  GET: Получение списка всех отзывов, доступно без токена. 200/404
-#  POST: Добавление нового отзыва, аутентифицированные. 201/400/401/404
-# /titles/{title_id}/reviews/{review_id}/:
-#  GET: Получение отзыва по id, доступно без токена. 200/404
-#  PATCH: Обновление отзыва по id, по токену. 200/400/401/403/404
-#  DELETE: Удалить отзыв по id, по токену. 204/401/403/404
-
-# /titles/{title_id}/reviews/{review_id}/comments/:
-#  GET: Получение списка всех комментариев к отзыву, без токена. 200/404
-#  POST: Добавление комментария к отзыву, по токену. 201/400/401/404
-# /titles/{title_id}/reviews/{review_id}/comments/{comment_id}/:
-#  GET: Получение комментария к отзыву, без токена. 200/404
-#  PATCH: Обновление комментария к отзыву, аутентифицир. 200/400/401/403/404
-#  DELETE: Удаление комментария к отзыву, автор, модер., админ. 204/401/403/404

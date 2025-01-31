@@ -1,40 +1,34 @@
-from datetime import datetime
-
-from django.conf import settings
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.core.exceptions import ValidationError
-from django.shortcuts import get_object_or_404
-from rest_framework import serializers
-from rest_framework.validators import UniqueValidator
 
-from reviews.models import (Category, Comment, Genre,
-                            Review, Title, User)
-# from reviews.validators import UsernameRegexValidator
+from api_yamdb.constants import (
+    VALID_USERNAME_PATTERN, FORBIDDEN_NAME, MAX_LENTH,
+    LENG_DATA_USER,)
 
 
 class UsernameRegexValidator(UnicodeUsernameValidator):
     """Валидация имени пользователя."""
 
-    regex = r'^[\w.@+-]+\Z'
+    regex = VALID_USERNAME_PATTERN
     flags = 0
-    max_length = settings.LENG_DATA_USER
-    message = (f'Введите правильное имя пользователя. Оно может содержать'
-               f' только буквы, цифры и знаки @/./+/-/_.'
-               f' Длина не более {settings.LENG_DATA_USER} символов')
+    max_length = LENG_DATA_USER
+    message = ('Введите правильное имя пользователя. Оно может содержать'
+               ' только буквы, цифры и знаки @/./+/-/_.'
+               f' Длина не более {LENG_DATA_USER} символов')
     error_messages = {
-        'invalid': f'Набор символов не более {settings.LENG_DATA_USER}. '
+        'invalid': f'Набор символов не более {LENG_DATA_USER}. '
                    'Только буквы, цифры и @/./+/-/_',
         'required': 'Поле не может быть пустым',
     }
 
 
-def username_me(value):
+def username_test(value):
     """Проверка имени пользователя (me недопустимое имя)."""
-    if value == 'me':
+    if value == FORBIDDEN_NAME:
         raise ValidationError(
-            'Имя пользователя "me" не разрешено.'
+            f'Имя пользователя {FORBIDDEN_NAME} не разрешено.'
         )
-    if len(value) > 150:
+    if len(value) > MAX_LENTH:
         raise ValidationError(
             'Имя пользователя слишком длинное.'
         )
@@ -42,11 +36,8 @@ def username_me(value):
 
 
 def len_email(value):
-    if len(value) > 150:
+    if len(value) > MAX_LENTH:
         raise ValidationError(
             'Емейл слишком длинный.'
         )
     return value
-
-
-###############
