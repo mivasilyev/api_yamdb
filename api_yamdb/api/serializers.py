@@ -6,7 +6,8 @@ from rest_framework.validators import UniqueValidator
 from api.validators import UsernameRegexValidator, username_test
 from reviews.models import Category, Comment, Genre, Review, Title, User
 from reviews.validators import current_year
-from api_yamdb.constants import FORBIDDEN_NAME, MAX_LENTH
+from api_yamdb.constants import (FORBIDDEN_NAME, MAX_LENTH,
+                                 MAX_SCORE, MIN_SCORE)
 
 
 class UsersSerializer(serializers.ModelSerializer):
@@ -157,10 +158,6 @@ class TitleSerializer(serializers.ModelSerializer):
 class ReviewSerializer(serializers.ModelSerializer):
     """Отзывы."""
 
-    # title = serializers.SlugRelatedField(
-    #     read_only=True,
-    #     slug_field='name'
-    # )
     author = serializers.SlugRelatedField(
         read_only=True,
         slug_field='username'
@@ -168,13 +165,15 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Review
-        fields = ('id', 'text', 'author', 'score', 'pub_date')  #, 'title'
+        fields = ('id', 'text', 'author', 'score', 'pub_date')
 
     def validate_score(self, value):
         """Проверка на корректность оценки."""
-        if not (1 <= value <= 10) or not isinstance(value, int):
+        if (not (MIN_SCORE <= value <= MAX_SCORE)
+                or not isinstance(value, int)):
             raise serializers.ValidationError(
-                'Поставьте оценку целым числом от 1 до 10.'
+                'Поставьте оценку целым числом от '
+                f'{MIN_SCORE} до {MAX_SCORE}.'
             )
         return value
 
@@ -189,5 +188,4 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
-        fields = ('id', 'author', 'review_id', 'text', 'pub_date')
-        read_only_fields = ('review_id', )
+        fields = ('id', 'text', 'author', 'pub_date')
