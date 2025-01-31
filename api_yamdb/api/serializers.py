@@ -1,12 +1,17 @@
+import random
+
+from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.mail import send_mail
 from django.core.exceptions import ValidationError
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
 from api.validators import UsernameRegexValidator, username_test
+from api_yamdb.constants import FORBIDDEN_NAME, MAX_LENTH
 from reviews.models import Category, Comment, Genre, Review, Title, User
 from reviews.validators import current_year
-from api_yamdb.constants import FORBIDDEN_NAME, MAX_LENTH
+from users.models import ROLES
 
 
 class UsersSerializer(serializers.ModelSerializer):
@@ -29,13 +34,6 @@ class UsersSerializer(serializers.ModelSerializer):
 
     def validate_username(self, value):
         return username_test(value)
-
-
-#class PersSerializer(UsersSerializer):
-#    """Сериализатор для пользователя."""
-
-#    class Meta(UsersSerializer.Meta):
-#        read_only_fields = ('role',)
 
 
 class SingUpSerializer(serializers.Serializer):
@@ -88,6 +86,29 @@ class SingUpSerializer(serializers.Serializer):
             })
 
         return data
+
+    def create(self, validated_data):
+        """Создание нового пользователя."""
+        confirmation_code = random.randrange(1000, 9999)
+        user, created = User.objects.get_or_create(
+            username=validated_data['username'],
+            email=validated_data['email'],
+        )
+        if not created:
+            confirmation_code = user.confirmation_code
+        else:
+            user.confirmation_code = confirmation_code
+            user.role = ROLES[0][0]
+            user.save()
+
+        send_mail(
+            'Код токена',
+            f'Код для получения токена {confirmation_code}',
+            settings.DEFAULT_FROM_EMAIL,
+            [validated_data['email']]
+        )
+
+        return user
 
 
 class GetTokenSerializer(serializers.Serializer):

@@ -1,8 +1,3 @@
-import random
-
-from django.conf import settings
-from django.core.mail import send_mail
-from django.db import IntegrityError
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -21,9 +16,7 @@ from api.serializers import (
     CategorySerializer, CommentSerializer, GenreSerializer, ReviewSerializer,
     TitleGetSerializer, TitleSerializer, UsersSerializer,
     GetTokenSerializer, SingUpSerializer)
-from api_yamdb.constants import MESSAGE_EMAIL_EXISTS, MESSAGE_USERNAME_EXISTS
 from reviews.models import Category, Genre, Review, Title, User
-from users.models import ROLES
 
 
 class UsersViewSet(viewsets.ModelViewSet):
@@ -46,7 +39,7 @@ class UsersViewSet(viewsets.ModelViewSet):
         user = request.user
         if request.method == 'PATCH':
             data = request.data.copy()
-            data['role'] = user.role  # Сохраняем текущую роль пользователя
+            data['role'] = user.role
             serializer = UsersSerializer(
                 user, data=data, partial=True
             )
@@ -69,38 +62,10 @@ class UserSignUp(views.APIView):
     def post(self, request):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
-        confirmation_code = random.randrange(1000, 9999)
-
-        try:
-            user, created = User.objects.get_or_create(
-                username=serializer.initial_data.get('username'),
-                email=serializer.initial_data.get('email')
-            )
-            if not created:
-                confirmation_code = user.confirmation_code
-
-            else:
-                user.confirmation_code = confirmation_code
-                user.role = ROLES[0][0]
-                user.save()
-
-        except IntegrityError:
-            return response.Response(
-                MESSAGE_EMAIL_EXISTS if
-                User.objects.filter(username='username').exists()
-                else MESSAGE_USERNAME_EXISTS,
-                status.HTTP_400_BAD_REQUEST
-            )
-
-        send_mail(
-            'Код токена',
-            f'Код для получения токена {confirmation_code}',
-            settings.DEFAULT_FROM_EMAIL,
-            [serializer.initial_data.get('email')]
-        )
-
+        serializer.save()
         return response.Response(
-            serializer.data, status=status.HTTP_200_OK
+            serializer.data,
+            status=status.HTTP_200_OK
         )
 
 
