@@ -8,7 +8,8 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
 from api.validators import UsernameRegexValidator, username_test
-from api_yamdb.constants import FORBIDDEN_NAME, MAX_LENTH
+from api_yamdb.constants import (FORBIDDEN_NAME, MAX_LENTH,
+                                 MAX_SCORE, MIN_SCORE)
 from reviews.models import Category, Comment, Genre, Review, Title, User
 from reviews.validators import current_year
 from users.models import ROLES
