@@ -71,7 +71,7 @@ class Title(models.Model):
         verbose_name='Название категории',
     )
     genre = models.ManyToManyField(
-        Genre, through='TitleGenres',
+        Genre, through='GenreTitle',
         verbose_name='Жанры')
 
     class Meta:
@@ -83,7 +83,7 @@ class Title(models.Model):
         return self.name
 
 
-class TitleGenres(models.Model):
+class GenreTitle(models.Model):
     """Связь произведений и жанров."""
 
     title = models.ForeignKey(
