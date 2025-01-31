@@ -1,6 +1,5 @@
 import os
 from pathlib import Path
-
 from datetime import timedelta
 
 
@@ -22,9 +21,9 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_filters',
     'djoser',
+    'reviews.apps.ReviewsConfig',
     'api.apps.ApiConfig',
     'users.apps.UsersConfig',
-    'reviews.apps.ReviewsConfig',
 ]
 
 MIDDLEWARE = [
@@ -120,13 +119,3 @@ SIMPLE_JWT = {
 EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
 DEFAULT_FROM_EMAIL = 'black.yamdb@example.com'
-
-
-LENG_SLUG = 50
-LENG_MAX = 256
-LENG_DATA_USER = 150
-LENG_EMAIL = 254
-LENG_CUT = 30
-
-MESSAGE_EMAIL_EXISTS = 'Этот email уже занят'
-MESSAGE_USERNAME_EXISTS = 'Это имя уже занято'
