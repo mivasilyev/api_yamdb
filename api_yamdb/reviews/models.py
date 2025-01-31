@@ -3,6 +3,7 @@ from django.core.validators import (
     MaxValueValidator, MinValueValidator, RegexValidator)
 from django.db import models
 
+from api_yamdb.constants import MAX_SCORE, MIN_SCORE
 from reviews.validators import current_year
 
 User = get_user_model()
@@ -62,7 +63,10 @@ class Title(models.Model):
         blank=True,
         null=True,
         verbose_name='Рейтинг',
-        validators=[MinValueValidator(1), MaxValueValidator(10)]
+        validators=[
+            MinValueValidator(MIN_SCORE),
+            MaxValueValidator(MAX_SCORE)
+        ]
     )
     description = models.TextField('Описание', null=True, blank=True,
                                    help_text='Опишите произведение')
@@ -117,9 +121,13 @@ class Review(models.Model):
     )
     score = models.PositiveIntegerField(
         verbose_name='Оценка',
-        help_text=('Оцените произведение в баллах от 1 до 10'
-                   ', где 10 - наивысшая оценка.'),
-        validators=[MinValueValidator(1), MaxValueValidator(10)]
+        help_text=(
+            f'Оцените произведение в баллах от {MIN_SCORE} до {MAX_SCORE}, '
+            f'где {MAX_SCORE} - наивысшая оценка.'),
+        validators=[
+            MinValueValidator(MIN_SCORE),
+            MaxValueValidator(MAX_SCORE)
+        ]
     )
     pub_date = models.DateTimeField(auto_now_add=True)
 
