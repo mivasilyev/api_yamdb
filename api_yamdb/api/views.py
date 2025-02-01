@@ -3,14 +3,14 @@ from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import (filters, mixins, serializers, status,
                             viewsets, views, response, permissions)
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.views import APIView
 
 from api.filters import TitleManyFilters
-from api.permissions import (IsAdminOrReadOnly, IsAuthorAdminModerOrReadOnly,
+from api.permissions import (IsAdminOrReadOnly, IsAuthorAdminModer,
                              IsAdmin)
 from api.serializers import (
     CategorySerializer, CommentSerializer, GenreSerializer, ReviewSerializer,
@@ -127,20 +127,22 @@ class TitleViewSet(viewsets.ModelViewSet):
         'category').prefetch_related('genre').all()
     serializer_class = TitleGetSerializer
     permission_classes = (IsAdminOrReadOnly,)
-    filter_backends = (DjangoFilterBackend,)
+    filter_backends = (DjangoFilterBackend, filters.OrderingFilter)
     filterset_class = TitleManyFilters
+    ordering_fields = ('name', 'year', 'category')
     http_method_names = ('get', 'post', 'patch', 'delete')
 
     def get_serializer_class(self):
         """Выбор сериализатора."""
-        if self.request.method == 'GET':
+        if self.request.method in permissions.SAFE_METHODS:
             return TitleGetSerializer
         return TitleSerializer
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
-    permission_classes = (IsAuthorAdminModerOrReadOnly,)
+    permission_classes = (
+        IsAuthorAdminModer, IsAuthenticatedOrReadOnly)
     http_method_names = ('get', 'post', 'patch', 'delete')
 
     def get_title(self):
@@ -177,7 +179,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
-    permission_classes = (IsAuthorAdminModerOrReadOnly,)
+    permission_classes = (
+        IsAuthorAdminModer, IsAuthenticatedOrReadOnly)
     http_method_names = ('get', 'post', 'patch', 'delete')
 
     def get_review(self):

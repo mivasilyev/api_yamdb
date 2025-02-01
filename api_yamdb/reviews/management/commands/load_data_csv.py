@@ -88,4 +88,5 @@ class Command(BaseCommand):
                 self.stdout.write(
                     self.style.SUCCESS(f'Файл {file_name} загружен')
                 )
-        self.stdout.write(self.style.SUCCESS(f'{cnt} файлов загружено'))
+        self.stdout.write(
+            self.style.SUCCESS(f'Загрузка завершена. Файлов загружено: {cnt}'))

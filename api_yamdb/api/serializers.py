@@ -146,13 +146,12 @@ class TitleGetSerializer(serializers.ModelSerializer):
 
     category = CategorySerializer(read_only=True)
     genre = GenreSerializer(read_only=True, many=True)
-    rating = serializers.IntegerField(read_only=True)
+    rating = serializers.IntegerField(read_only=True, default=0)
 
     class Meta:
         model = Title
         fields = ('id', 'name', 'year',
                   'description', 'category', 'genre', 'rating')
-        read_only_fields = ('id',)
 
 
 class TitleSerializer(serializers.ModelSerializer):
@@ -165,15 +164,21 @@ class TitleSerializer(serializers.ModelSerializer):
     genre = serializers.SlugRelatedField(
         many=True,
         slug_field='slug',
-        queryset=Genre.objects.all()
+        queryset=Genre.objects.all(),
+        allow_empty=False
     )
     year = serializers.IntegerField(validators=(current_year,))
+
+    def to_representation(self, instance):
+        if self.context['request'].method == 'GET':
+            serializer = TitleGetSerializer(instance)
+            return serializer.data
+        return super().to_representation(instance)
 
     class Meta:
         model = Title
         fields = ('id', 'name', 'year',
                   'description', 'category', 'genre',)
-        read_only_fields = ('id',)
 
 
 class ReviewSerializer(serializers.ModelSerializer):

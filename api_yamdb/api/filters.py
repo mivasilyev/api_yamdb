@@ -6,9 +6,10 @@ from reviews.models import Title
 class TitleManyFilters(django_filters.FilterSet):
     """
     Комбинированный фильтр для вывода произведений.
+
     Поиск категории и жанра по слагу.
     """
-    year = django_filters.NumberFilter(field_name='year')
+
     category = django_filters.CharFilter(
         field_name='category__slug',
         lookup_expr='icontains'

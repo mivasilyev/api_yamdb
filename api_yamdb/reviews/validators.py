@@ -7,5 +7,3 @@ def current_year(value):
 
     if value > now().year:
         raise ValidationError('Этот год ещё не наступил!')
-    if value < 0:
-        raise ValidationError('Год не может быть отрицательным!')

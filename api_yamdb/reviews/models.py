@@ -3,61 +3,55 @@ from django.core.validators import (
     MaxValueValidator, MinValueValidator, RegexValidator)
 from django.db import models
 
-from api_yamdb.constants import MAX_SCORE, MIN_SCORE
+from api_yamdb.constants import MAX_SCORE, MIN_SCORE, LENG_MAX, LENG_CUT
 from reviews.validators import current_year
 
 User = get_user_model()
 
 
-class Genre(models.Model):
-    """Жанры произведений."""
+class BaseModelCategoryGenre(models.Model):
+    """Абстрактная модель для категорий и жанров."""
 
-    name = models.CharField('Жанр', max_length=256, )
-    slug = models.SlugField(max_length=50,
-                            help_text=('Идентификатор страницы для URL; '
+    name = models.CharField('Наименование', max_length=LENG_MAX,)
+    slug = models.SlugField(help_text=('Идентификатор страницы для URL; '
                                        'разрешены символы латиницы, цифры, '
-                                       'дефис и подчёркивание.'), unique=True,
-                            validators=[RegexValidator(
-                                regex=r'^[-a-zA-Z0-9_]+$',
-                                message='Слаг содержит недопустимый символ')],
-                            verbose_name='Идентификатор жанра')
+                                       'дефис и подчёркивание.'),
+                            unique=True,
+                            verbose_name='Идентификатор жанра'
+                            )
+
+    class Meta:
+        abstract = True
+        ordering = ('name',)
+
+    def __str__(self):
+        return self.name[:LENG_CUT]
+
+
+class Genre(BaseModelCategoryGenre):
+    """Жанры произведений."""
 
     class Meta:
         verbose_name = 'жанр'
         verbose_name_plural = 'Жанры'
 
-    def __str__(self):
-        return self.name
 
-
-class Category(models.Model):
+class Category(BaseModelCategoryGenre):
     """Категории произведений."""
-
-    name = models.CharField('Название категории', max_length=256, )
-    slug = models.SlugField(max_length=50,
-                            help_text=('Идентификатор страницы для URL; '
-                                       'разрешены символы латиницы, цифры, '
-                                       'дефис и подчёркивание.'), unique=True,
-                            validators=[RegexValidator(
-                                regex=r'^[-a-zA-Z0-9_]+$',
-                                message='Слаг содержит недопустимый символ')],
-                            verbose_name='Идентификатор категории')
 
     class Meta:
         verbose_name = 'категория'
         verbose_name_plural = 'Категории'
-
-    def __str__(self):
-        return self.name
 
 
 class Title(models.Model):
     """Произведения."""
 
     name = models.CharField('Наименование произведения', max_length=256)
-    year = models.PositiveSmallIntegerField(
+    year = models.SmallIntegerField(
         'Дата выхода произведения',
-        validators=(current_year,))
+        validators=(current_year,)
+    )
     rating = models.SmallIntegerField(
         default=None,
         blank=True,
@@ -68,15 +62,23 @@ class Title(models.Model):
             MaxValueValidator(MAX_SCORE)
         ]
     )
-    description = models.TextField('Описание', null=True, blank=True,
-                                   help_text='Опишите произведение')
+    description = models.TextField('Описание',
+                                   null=True,
+                                   blank=True,
+                                   help_text='Опишите произведение'
+                                   )
     category = models.ForeignKey(
-        Category, null=True, blank=True, on_delete=models.SET_NULL,
+        Category,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
         verbose_name='Название категории',
     )
     genre = models.ManyToManyField(
-        Genre, through='GenreTitle',
-        verbose_name='Жанры')
+        Genre,
+        through='GenreTitle',
+        verbose_name='Жанры'
+    )
 
     class Meta:
         default_related_name = 'titles'
