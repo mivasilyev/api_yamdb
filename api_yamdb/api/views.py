@@ -69,29 +69,17 @@ class UserSignUp(views.APIView):
 
 
 class UserGetToken(APIView):
-    """Вью-класс получения токена по username и confirmation_code."""
-
     permission_classes = (AllowAny,)
 
     def post(self, request):
-        """Функция получения токена при регистрации."""
-
         serializer = GetTokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        username = serializer.validated_data.get('username')
-        user = get_object_or_404(User, username=username)
-        confirmation_code = serializer.validated_data.get(
-            'confirmation_code'
+        user = get_object_or_404(
+            User, 
+            username=serializer.validated_data['username']
         )
-        if user.confirmation_code == int(confirmation_code):
-            token = AccessToken.for_user(user)
-            return Response(
-                {'token': str(token)}, status=status.HTTP_200_OK
-            )
-        return Response(
-            {'confirmation_code': 'Неверный код подтверждения!'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        token = AccessToken.for_user(user)
+        return Response({'token': str(token)}, status=status.HTTP_200_OK)
 
 
 class CategoryGenreViewset(
