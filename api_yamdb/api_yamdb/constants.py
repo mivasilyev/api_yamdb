@@ -8,6 +8,7 @@ LENG_MAX = 256
 LENG_DATA_USER = 150
 LENG_EMAIL = 254
 LENG_CUT = 30
+LENG_APPENDIX = '...'
 
 MESSAGE_EMAIL_EXISTS = 'Этот email уже занят'
 MESSAGE_USERNAME_EXISTS = 'Это имя уже занято'
