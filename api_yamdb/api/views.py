@@ -75,11 +75,11 @@ class UserGetToken(APIView):
 
     def post(self, request):
         """Функция получения токена при регистрации."""
-        
+
         serializer = GetTokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = get_object_or_404(
-            User, 
+            User,
             username=serializer.validated_data['username']
         )
         token = AccessToken.for_user(user)

@@ -124,7 +124,7 @@ class GetTokenSerializer(serializers.Serializer):
 
     def validate_username(self, value):
         return username_test(value)
-    
+
     def validate(self, data):
         user = get_object_or_404(User, username=data['username'])
         if user.confirmation_code != int(data['confirmation_code']):
