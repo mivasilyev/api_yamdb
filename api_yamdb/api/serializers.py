@@ -3,7 +3,8 @@ import random
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
-from django.shortcuts import get_object_or_404
+from django.core.mail import send_mail
+from django.db.models import Avg
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
@@ -122,14 +123,6 @@ class GetTokenSerializer(serializers.Serializer):
 
     def validate_username(self, value):
         return username_test(value)
-    
-    def validate(self, data):
-        user = get_object_or_404(User, username=data['username'])
-        if user.confirmation_code != int(data['confirmation_code']):
-            raise serializers.ValidationError(
-                {'confirmation_code': 'Неверный код подтверждения!'}
-            )
-        return data
 
 
 class CategorySerializer(serializers.ModelSerializer):
