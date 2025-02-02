@@ -2,15 +2,14 @@ import random
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.core.mail import send_mail
 from django.core.exceptions import ValidationError
+from django.core.mail import send_mail
 from django.db.models import Avg
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
 from api.validators import UsernameRegexValidator, username_test
-from api_yamdb.constants import (FORBIDDEN_NAME, MAX_LENTH,
-                                 MAX_SCORE, MIN_SCORE)
+from api_yamdb.constants import FORBIDDEN_NAME, MAX_LENTH, MAX_SCORE, MIN_SCORE
 from reviews.models import Category, Comment, Genre, Review, Title, User
 from reviews.validators import current_year
 from users.models import ROLES
@@ -204,6 +203,16 @@ class ReviewSerializer(serializers.ModelSerializer):
                 f'{MIN_SCORE} до {MAX_SCORE}.'
             )
         return value
+
+    def validate(self, data):
+        author = self.context.get('request').user
+        title_id = self.context['view'].kwargs['title_id']
+        if (Review.objects.filter(author=author, title=title_id).exists()
+                and self.context['request'].method == 'POST'):
+            raise serializers.ValidationError(
+                'Вы не можете дважды дать отзыв на одно произведение.'
+            )
+        return data
 
 
 class CommentSerializer(serializers.ModelSerializer):

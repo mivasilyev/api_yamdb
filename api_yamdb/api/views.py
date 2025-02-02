@@ -1,20 +1,20 @@
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import (filters, mixins, serializers, status,
-                            viewsets, views, response, permissions)
-from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
+from rest_framework import (filters, mixins, permissions, response, status,
+                            views, viewsets)
 from rest_framework.decorators import action
+from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import AccessToken
 
 from api.filters import TitleManyFilters
-from api.permissions import (IsAdminOrReadOnly, IsAuthorAdminModer,
-                             IsAdmin)
-from api.serializers import (
-    CategorySerializer, CommentSerializer, GenreSerializer, ReviewSerializer,
-    TitleGetSerializer, TitleSerializer, UsersSerializer,
-    GetTokenSerializer, SingUpSerializer)
+from api.permissions import IsAdmin, IsAdminOrReadOnly, IsAuthorAdminModer
+from api.serializers import (CategorySerializer, CommentSerializer,
+                             GenreSerializer, GetTokenSerializer,
+                             ReviewSerializer, SingUpSerializer,
+                             TitleGetSerializer, TitleSerializer,
+                             UsersSerializer)
 from reviews.models import Category, Genre, Review, Title, User
 
 
@@ -153,11 +153,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
         return self.get_title().reviews.all()
 
     def perform_create(self, serializer):
-        if self.get_title().reviews.filter(author=self.request.user):
-            # Игорь Шкода: "Валидацию выносим в сериализатор." Как?
-            raise serializers.ValidationError(
-                'Вы не можете дважды дать отзыв на одно произведение.'
-            )
         serializer.save(title=self.get_title(), author=self.request.user)
 
 

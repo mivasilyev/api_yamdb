@@ -2,8 +2,8 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-from api_yamdb.constants import (MAX_SCORE, MIN_SCORE, LENG_APPENDIX,
-                                 LENG_MAX, LENG_CUT)
+from api_yamdb.constants import (LENG_APPENDIX, LENG_CUT, LENG_MAX, MAX_SCORE,
+                                 MIN_SCORE)
 from reviews.validators import current_year
 
 User = get_user_model()
@@ -37,7 +37,6 @@ class Genre(BaseModelCategoryGenre):
     class Meta:
         verbose_name = 'жанр'
         verbose_name_plural = 'Жанры'
-        # default_related_name = 'genres'
 
 
 class Category(BaseModelCategoryGenre):
