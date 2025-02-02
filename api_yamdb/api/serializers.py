@@ -4,6 +4,7 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from django.core.exceptions import ValidationError
+from django.db.models import Avg
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 
@@ -146,15 +147,21 @@ class TitleGetSerializer(serializers.ModelSerializer):
 
     category = CategorySerializer(read_only=True)
     genre = GenreSerializer(read_only=True, many=True)
-    rating = serializers.IntegerField(read_only=True, default=0)
+    rating = serializers.SerializerMethodField(default=None)
 
     class Meta:
         model = Title
-        fields = ('id', 'name', 'year',
-                  'description', 'category', 'genre', 'rating')
+        fields = ('id', 'name', 'year', 'rating',
+                  'description', 'category', 'genre',)
+
+    def get_rating(self, instance):
+        """Вычисляем рейтинг произведения."""
+        rating = instance.reviews.aggregate(
+            Avg('score', default=None))['score__avg']
+        return round(rating) if rating is not None else rating
 
 
-class TitleSerializer(serializers.ModelSerializer):
+class TitleSerializer(TitleGetSerializer):
     """Для POST, PATCH и DELETE запросов произведений."""
 
     category = serializers.SlugRelatedField(
@@ -175,14 +182,9 @@ class TitleSerializer(serializers.ModelSerializer):
             return serializer.data
         return super().to_representation(instance)
 
-    class Meta:
-        model = Title
-        fields = ('id', 'name', 'year',
-                  'description', 'category', 'genre',)
-
 
 class ReviewSerializer(serializers.ModelSerializer):
-    """Отзывы."""
+    """Сериализатор для отзывов."""
 
     author = serializers.SlugRelatedField(
         read_only=True,
@@ -205,7 +207,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    """Комментарии к отзывам."""
+    """Сериализатор для комментариев к отзывам."""
 
     author = serializers.SlugRelatedField(
         read_only=True,

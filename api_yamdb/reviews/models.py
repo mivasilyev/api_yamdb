@@ -1,6 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.core.validators import (
-    MaxValueValidator, MinValueValidator, RegexValidator)
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from api_yamdb.constants import MAX_SCORE, MIN_SCORE, LENG_MAX, LENG_CUT
@@ -51,16 +50,6 @@ class Title(models.Model):
     year = models.SmallIntegerField(
         'Дата выхода произведения',
         validators=(current_year,)
-    )
-    rating = models.SmallIntegerField(
-        default=None,
-        blank=True,
-        null=True,
-        verbose_name='Рейтинг',
-        validators=[
-            MinValueValidator(MIN_SCORE),
-            MaxValueValidator(MAX_SCORE)
-        ]
     )
     description = models.TextField('Описание',
                                    null=True,
@@ -136,6 +125,7 @@ class Review(models.Model):
     class Meta:
         verbose_name = 'отзыв'
         verbose_name_plural = 'Отзывы'
+        ordering = ('-pub_date',)
         constraints = [
             models.UniqueConstraint(
                 fields=['title_id', 'author'],
@@ -170,6 +160,7 @@ class Comment(models.Model):
     class Meta:
         verbose_name = 'комментарий'
         verbose_name_plural = 'Комментарии'
+        ordering = ('-pub_date',)
 
     def __str__(self):
         return self.text

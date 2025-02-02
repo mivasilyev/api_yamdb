@@ -1,4 +1,3 @@
-from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import (filters, mixins, serializers, status,
@@ -140,6 +139,8 @@ class TitleViewSet(viewsets.ModelViewSet):
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
+    """Обзоры на произведения."""
+
     serializer_class = ReviewSerializer
     permission_classes = (
         IsAuthorAdminModer, IsAuthenticatedOrReadOnly)
@@ -148,43 +149,32 @@ class ReviewViewSet(viewsets.ModelViewSet):
     def get_title(self):
         return get_object_or_404(Title, id=self.kwargs.get('title_id'))
 
-    def update_rating(self):
-        """Обновление рейтинга в модели Title."""
-        title = self.get_title()
-        avg_rating = title.reviews.aggregate(Avg('score', default=None))
-        new_rating = avg_rating['score__avg']
-        if new_rating is not None:
-            new_rating = round(avg_rating['score__avg'])
-        Title.objects.filter(id=title.id).update(rating=new_rating)
-
     def get_queryset(self):
         return self.get_title().reviews.all()
 
     def perform_create(self, serializer):
         if self.get_title().reviews.filter(author=self.request.user):
+            # Игорь Шкода: "Валидацию выносим в сериализатор." Как?
             raise serializers.ValidationError(
                 'Вы не можете дважды дать отзыв на одно произведение.'
             )
         serializer.save(title=self.get_title(), author=self.request.user)
-        self.update_rating()
-
-    def perform_update(self, serializer):
-        super().perform_update(serializer)
-        self.update_rating()
-
-    def perform_destroy(self, instance):
-        super().perform_destroy(instance)
-        self.update_rating()
 
 
 class CommentViewSet(viewsets.ModelViewSet):
+    """Комментарии к обзорам на произведения."""
+
     serializer_class = CommentSerializer
     permission_classes = (
         IsAuthorAdminModer, IsAuthenticatedOrReadOnly)
     http_method_names = ('get', 'post', 'patch', 'delete')
 
     def get_review(self):
-        return get_object_or_404(Review, id=self.kwargs.get('review_id'))
+        return get_object_or_404(
+            Review,
+            id=self.kwargs.get('review_id'),
+            title__id=self.kwargs.get('title_id')
+        )
 
     def get_queryset(self):
         return self.get_review().comments.all()
