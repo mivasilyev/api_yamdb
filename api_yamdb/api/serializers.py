@@ -64,7 +64,7 @@ class SingUpSerializer(serializers.Serializer):
                 'username': 'Имя пользователя слишком длинное.'
             })
 
-        if len(email) > 150:
+        if len(email) > MAX_LENTH:
             raise ValidationError({
                 'email': 'Емейл слишком длинный.'
             })
