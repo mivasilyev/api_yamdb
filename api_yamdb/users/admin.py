@@ -1,9 +1,10 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import MyUser
+
+from .models import ProjectUser
 
 
-class CustomUserAdmin(UserAdmin):
+class UsersUserAdmin(UserAdmin):
     fieldsets = UserAdmin.fieldsets + (
         ('Extra Fields', {'fields': ('bio', 'role',)}),
     )
@@ -13,4 +14,4 @@ class CustomUserAdmin(UserAdmin):
     list_filter = UserAdmin.list_filter + ('role',)
 
 
-admin.site.register(MyUser, CustomUserAdmin)
+admin.site.register(ProjectUser, UsersUserAdmin)

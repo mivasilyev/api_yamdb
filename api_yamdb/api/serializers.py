@@ -46,7 +46,7 @@ class SingUpSerializer(serializers.Serializer):
     )
     username = serializers.CharField(
         required=True,
-        validators=[UsernameRegexValidator(), ]
+        validators=[UsernameRegexValidator()]
     )
 
     def validate(self, data):
@@ -91,7 +91,7 @@ class SingUpSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         """Создание нового пользователя."""
-        confirmation_code = random.randrange(1000, 9999)
+
         user, created = User.objects.get_or_create(
             username=validated_data['username'],
             email=validated_data['email'],
@@ -99,13 +99,12 @@ class SingUpSerializer(serializers.Serializer):
         if not created:
             confirmation_code = user.confirmation_code
         else:
-            user.confirmation_code = confirmation_code
-            user.role = ROLES[0][0]
+            user.confirmation_code = random.randrange(1000, 9999)
             user.save()
 
         send_mail(
             'Код токена',
-            f'Код для получения токена {confirmation_code}',
+            f'Код для получения токена {user.confirmation_code}',
             settings.DEFAULT_FROM_EMAIL,
             [validated_data['email']]
         )
@@ -118,7 +117,7 @@ class GetTokenSerializer(serializers.Serializer):
 
     username = serializers.CharField(
         required=True,
-        validators=(UsernameRegexValidator(), )
+        validators=(UsernameRegexValidator(),)
     )
     confirmation_code = serializers.CharField(required=True)
 

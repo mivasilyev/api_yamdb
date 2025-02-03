@@ -1,6 +1,6 @@
 import os
-from pathlib import Path
 from datetime import timedelta
+from pathlib import Path
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,9 +21,10 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_filters',
     'djoser',
+    'users.apps.UsersConfig',
     'reviews.apps.ReviewsConfig',
     'api.apps.ApiConfig',
-    'users.apps.UsersConfig',
+    
 ]
 
 MIDDLEWARE = [
@@ -93,7 +94,7 @@ STATIC_URL = '/static/'
 
 STATICFILES_DIRS = ((BASE_DIR / 'static/'),)
 
-AUTH_USER_MODEL = 'users.MyUser'
+AUTH_USER_MODEL = 'users.ProjectUser'
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [

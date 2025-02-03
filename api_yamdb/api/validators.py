@@ -33,11 +33,3 @@ def username_test(value):
             'Имя пользователя слишком длинное.'
         )
     return value
-
-
-def len_email(value):
-    if len(value) > MAX_LENTH:
-        raise ValidationError(
-            'Емейл слишком длинный.'
-        )
-    return value

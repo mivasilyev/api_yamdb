@@ -1,7 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-from api_yamdb.constants import EMAIL_MAX_LENGTH
+from api_yamdb.constants import LENG_EMAIL, ROLE_MAX_LENTH
 
 USER = 'user'
 MODERATOR = 'moderator'
@@ -14,34 +14,20 @@ ROLES = (
 )
 
 
-class MyUser(AbstractUser):
+class ProjectUser(AbstractUser):
     email = models.CharField(
-        'Электронная почта', max_length=EMAIL_MAX_LENGTH, unique=True)
+        'Электронная почта', max_length=LENG_EMAIL, unique=True)
     bio = models.TextField('Биография', blank=True)
-    role = models.CharField('Роль', max_length=9,
+    role = models.CharField('Роль', max_length=ROLE_MAX_LENTH,
                             choices=ROLES, default=USER)
     confirmation_code = models.SmallIntegerField('Код подтверждения',
                                                  blank=True, null=True)
 
-    def _generate_jwt_token(self):
-        """Создаем JWT-Token с экспирацией через 60 дней."""
-        import jwt
-        from datetime import datetime, timedelta
-        from django.conf import settings
-        dt = datetime.now() + timedelta(days=60)
-
-        token = jwt.encode({
-            'id': self.pk,
-            'exp': int(dt.strftime('%s'))
-        }, settings.SECRET_KEY, algorithm='HS256')
-
-        return token
 
     @property
     def is_admin(self):
         return (self.role == ADMIN
-                or self.is_superuser is True
-                or self.is_staff is True)
+                or self.is_staff)
 
     @property
     def is_moderator(self):

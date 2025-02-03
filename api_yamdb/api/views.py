@@ -37,13 +37,11 @@ class UsersViewSet(viewsets.ModelViewSet):
     def me(self, request):
         user = request.user
         if request.method == 'PATCH':
-            data = request.data.copy()
-            data['role'] = user.role
             serializer = UsersSerializer(
-                user, data=data, partial=True
+                user, data=request.data.copy(), partial=True
             )
             serializer.is_valid(raise_exception=True)
-            serializer.save()
+            serializer.save(role=user.role)
             return response.Response(
                 serializer.data, status=status.HTTP_200_OK
             )

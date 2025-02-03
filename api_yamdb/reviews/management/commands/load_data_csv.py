@@ -5,7 +5,7 @@ from django.db import transaction
 
 from api_yamdb.settings import BASE_DIR
 from reviews.models import Category, Comment, Genre, GenreTitle, Review, Title
-from users.models import MyUser
+from users.models import ProjectUser
 
 DATA_FILES_CSV = [
     'category.csv',
@@ -58,7 +58,7 @@ class Command(BaseCommand):
                             genre_id=row['genre_id']
                         )
                     elif 'users.csv' == file_name:
-                        MyUser.objects.update_or_create(
+                        ProjectUser.objects.update_or_create(
                             id=row['id'],
                             username=row['username'],
                             email=row['email'],
