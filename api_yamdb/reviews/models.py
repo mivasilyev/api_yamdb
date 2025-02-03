@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.utils.text import Truncator
 
 from api_yamdb.constants import (LENG_APPENDIX, LENG_CUT, LENG_MAX, MAX_SCORE,
                                  MIN_SCORE)
@@ -25,16 +26,13 @@ class BaseModelCategoryGenre(models.Model):
         ordering = ('name',)
 
     def __str__(self):
-        if len(self.name) <= LENG_CUT:
-            return self.name
-        else:
-            return self.name[:LENG_CUT - len(LENG_APPENDIX)] + LENG_APPENDIX
+        return Truncator(self.name).words(5)
 
 
 class Genre(BaseModelCategoryGenre):
     """Жанры произведений."""
 
-    class Meta:
+    class Meta(BaseModelCategoryGenre.Meta):
         verbose_name = 'жанр'
         verbose_name_plural = 'Жанры'
 
@@ -42,7 +40,7 @@ class Genre(BaseModelCategoryGenre):
 class Category(BaseModelCategoryGenre):
     """Категории произведений."""
 
-    class Meta:
+    class Meta(BaseModelCategoryGenre.Meta):
         verbose_name = 'категория'
         verbose_name_plural = 'Категории'
 
@@ -112,10 +110,11 @@ class BaseModelReviewComment(models.Model):
         ordering = ('-pub_date',)
 
     def __str__(self):
-        if len(self.text) <= LENG_CUT:
-            return self.text
-        else:
-            return self.text[:LENG_CUT - len(LENG_APPENDIX)] + LENG_APPENDIX
+        return Truncator(self.text).words(5)
+        # if len(self.text) <= LENG_CUT:
+            # return self.text
+        # else:
+            # return self.text[:LENG_CUT - len(LENG_APPENDIX)] + LENG_APPENDIX
 
 
 class Review(BaseModelReviewComment):
@@ -144,7 +143,7 @@ class Review(BaseModelReviewComment):
         ]
     )
 
-    class Meta:
+    class Meta(BaseModelReviewComment.Meta):
         verbose_name = 'отзыв'
         verbose_name_plural = 'Отзывы'
         constraints = [
@@ -171,6 +170,6 @@ class Comment(BaseModelReviewComment):
         verbose_name='Автор'
     )
 
-    class Meta:
+    class Meta(BaseModelReviewComment.Meta):
         verbose_name = 'комментарий'
         verbose_name_plural = 'Комментарии'
