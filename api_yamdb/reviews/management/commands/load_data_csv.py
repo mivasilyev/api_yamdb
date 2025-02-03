@@ -26,32 +26,32 @@ class Command(BaseCommand):
             with open(file_path, 'r', encoding='utf-8') as file:
                 reader = csv.DictReader(file, delimiter=",")
                 for row in reader:
-                    if CATEGORY == file_name:
+                    if 'category.csv' == file_name:
                         Category.objects.update_or_create(
                             id=row['id'],
                             name=row['name'],
                             slug=row['slug']
                         )
-                    elif GENRE == file_name:
+                    elif 'genre.csv' == file_name:
                         Genre.objects.update_or_create(
                             id=row['id'],
                             name=row['name'],
                             slug=row['slug']
                         )
-                    elif TITLES == file_name:
+                    elif 'titles.csv' == file_name:
                         Title.objects.update_or_create(
                             id=row['id'],
                             name=row['name'],
                             year=row['year'],
                             category_id=row['category'],
                         )
-                    elif GENRE_TITLE == file_name:
+                    elif 'genre_title.csv' == file_name:
                         GenreTitle.objects.update_or_create(
                             id=row['id'],
                             title_id=row['title_id'],
                             genre_id=row['genre_id']
                         )
-                    elif USERS == file_name:
+                    elif 'users.csv' == file_name:
                         MyUser.objects.update_or_create(
                             id=row['id'],
                             username=row['username'],
@@ -61,7 +61,7 @@ class Command(BaseCommand):
                             first_name=row['first_name'],
                             last_name=row['last_name'],
                         )
-                    elif REVIEW == file_name:
+                    elif 'review.csv' == file_name:
                         Review.objects.update_or_create(
                             id=row['id'],
                             title_id=row['title_id'],
@@ -70,7 +70,7 @@ class Command(BaseCommand):
                             score=row['score'],
                             pub_date=row['pub_date']
                         )
-                    elif COMMENTS == file_name:
+                    elif 'comments.csv' == file_name:
                         Comment.objects.update_or_create(
                             id=row['id'],
                             review_id_id=row['review_id'],
