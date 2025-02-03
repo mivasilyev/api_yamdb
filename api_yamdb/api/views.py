@@ -27,7 +27,9 @@ class UsersViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAdmin,)
     lookup_field = 'username'
     search_fields = ('username',)
-    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
+    filter_backends = (
+        DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter)
+    ordering = ('id',)
     http_method_names = ('get', 'post', 'patch', 'delete')
 
     @action(
@@ -122,6 +124,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend, filters.OrderingFilter)
     filterset_class = TitleManyFilters
     ordering_fields = ('name', 'year', 'category')
+    ordering = ('id',)
     http_method_names = ('get', 'post', 'patch', 'delete')
 
     def get_serializer_class(self):

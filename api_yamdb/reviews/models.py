@@ -3,8 +3,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils.text import Truncator
 
-from api_yamdb.constants import (LENG_APPENDIX, LENG_CUT, LENG_MAX, MAX_SCORE,
-                                 MIN_SCORE)
+from api_yamdb.constants import (LENG_MAX, MAX_SCORE, MIN_SCORE)
 from reviews.validators import current_year
 
 User = get_user_model()
@@ -18,7 +17,7 @@ class BaseModelCategoryGenre(models.Model):
                                        'разрешены символы латиницы, цифры, '
                                        'дефис и подчёркивание.'),
                             unique=True,
-                            verbose_name='Идентификатор жанра'
+                            verbose_name='Идентификатор'
                             )
 
     class Meta:
