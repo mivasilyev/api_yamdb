@@ -204,8 +204,8 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     def validate_score(self, value):
         """Проверка на корректность оценки."""
-        if (not (MIN_SCORE <= value <= MAX_SCORE)
-                or not isinstance(value, int)):
+        if (not isinstance(value, int)
+                or not (MIN_SCORE <= value <= MAX_SCORE)):
             raise serializers.ValidationError(
                 'Поставьте оценку целым числом от '
                 f'{MIN_SCORE} до {MAX_SCORE}.'
@@ -213,10 +213,13 @@ class ReviewSerializer(serializers.ModelSerializer):
         return value
 
     def validate(self, data):
-        author = self.context.get('request').user
-        title_id = self.context['view'].kwargs['title_id']
-        if (Review.objects.filter(author=author, title=title_id).exists()
-                and self.context['request'].method == 'POST'):
+        if (
+            self.context['request'].method == 'POST'
+            and Review.objects.filter(
+                author=self.context.get('request').user,
+                title=self.context['view'].kwargs['title_id']
+            ).exists()
+        ):
             raise serializers.ValidationError(
                 'Вы не можете дважды дать отзыв на одно произведение.'
             )
