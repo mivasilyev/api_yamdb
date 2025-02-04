@@ -110,7 +110,7 @@ class BaseModelReviewComment(models.Model):
 
     def __str__(self):
         return Truncator(self.text).words(5)
-    
+
 
 class Review(BaseModelReviewComment):
     """Модель отзыва к произведению."""
