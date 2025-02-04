@@ -12,7 +12,6 @@ from api.validators import UsernameRegexValidator, username_test
 from api_yamdb.constants import FORBIDDEN_NAME, MAX_LENTH, MAX_SCORE, MIN_SCORE
 from reviews.models import Category, Comment, Genre, Review, Title, User
 from reviews.validators import current_year
-from users.models import ROLES
 
 
 class UsersSerializer(serializers.ModelSerializer):
@@ -95,9 +94,7 @@ class SingUpSerializer(serializers.Serializer):
             username=validated_data['username'],
             email=validated_data['email'],
         )
-        if not created:
-            confirmation_code = user.confirmation_code
-        else:
+        if created:
             user.confirmation_code = random.randrange(1000, 9999)
             user.save()
 

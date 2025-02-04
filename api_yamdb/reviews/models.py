@@ -110,11 +110,7 @@ class BaseModelReviewComment(models.Model):
 
     def __str__(self):
         return Truncator(self.text).words(5)
-        # if len(self.text) <= LENG_CUT:
-            # return self.text
-        # else:
-            # return self.text[:LENG_CUT - len(LENG_APPENDIX)] + LENG_APPENDIX
-
+    
 
 class Review(BaseModelReviewComment):
     """Модель отзыва к произведению."""

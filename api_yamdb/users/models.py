@@ -23,7 +23,6 @@ class ProjectUser(AbstractUser):
     confirmation_code = models.SmallIntegerField('Код подтверждения',
                                                  blank=True, null=True)
 
-
     @property
     def is_admin(self):
         return (self.role == ADMIN
