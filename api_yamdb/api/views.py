@@ -1,3 +1,4 @@
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import (filters, mixins, permissions, response, status,
@@ -5,8 +6,8 @@ from rest_framework import (filters, mixins, permissions, response, status,
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework.views import APIView
 
 from api.filters import TitleManyFilters
 from api.permissions import IsAdmin, IsAdminOrReadOnly, IsAuthorAdminModer
@@ -26,7 +27,9 @@ class UsersViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAdmin,)
     lookup_field = 'username'
     search_fields = ('username',)
-    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
+    filter_backends = (
+        DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter)
+    ordering = ('id',)
     http_method_names = ('get', 'post', 'patch', 'delete')
 
     @action(
@@ -112,13 +115,14 @@ class GenreViewSet(CategoryGenreViewset):
 class TitleViewSet(viewsets.ModelViewSet):
     """Произведения."""
 
-    queryset = Title.objects.select_related(
-        'category').prefetch_related('genre').all()
-    serializer_class = TitleGetSerializer
+    queryset = Title.objects.annotate(
+        rating=Avg('reviews__score')).select_related(
+            'category').prefetch_related('genre').all()
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend, filters.OrderingFilter)
     filterset_class = TitleManyFilters
     ordering_fields = ('name', 'year', 'category')
+    ordering = ('id',)
     http_method_names = ('get', 'post', 'patch', 'delete')
 
     def get_serializer_class(self):

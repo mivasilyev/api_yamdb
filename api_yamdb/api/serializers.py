@@ -4,7 +4,6 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
-from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
@@ -154,18 +153,12 @@ class TitleGetSerializer(serializers.ModelSerializer):
 
     category = CategorySerializer(read_only=True)
     genre = GenreSerializer(read_only=True, many=True)
-    rating = serializers.SerializerMethodField(default=None)
+    rating = serializers.IntegerField(read_only=True, default=None)
 
     class Meta:
         model = Title
         fields = ('id', 'name', 'year', 'rating',
                   'description', 'category', 'genre',)
-
-    def get_rating(self, instance):
-        """Вычисляем рейтинг произведения."""
-        rating = instance.reviews.aggregate(
-            Avg('score', default=None))['score__avg']
-        return round(rating) if rating is not None else rating
 
 
 class TitleSerializer(TitleGetSerializer):
@@ -184,10 +177,7 @@ class TitleSerializer(TitleGetSerializer):
     year = serializers.IntegerField(validators=(current_year,))
 
     def to_representation(self, instance):
-        if self.context['request'].method == 'GET':
-            serializer = TitleGetSerializer(instance)
-            return serializer.data
-        return super().to_representation(instance)
+        return TitleGetSerializer(instance).data
 
 
 class ReviewSerializer(serializers.ModelSerializer):
