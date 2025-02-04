@@ -1,5 +1,5 @@
 import csv
-import inspect
+
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.db import transaction
@@ -26,27 +26,24 @@ class Command(BaseCommand):
             with open(file_path, 'r', encoding='utf-8') as file:
                 reader = csv.DictReader(file, delimiter=",")
                 for row in reader:
-                    if 'category.csv' == file_name:
+                    if file_name == CATEGORY:
                         Category.objects.update_or_create(**row)
-                    elif 'genre.csv' == file_name:
+                    elif file_name == GENRE:
                         Genre.objects.update_or_create(**row)
-
-                    elif 'titles.csv' == file_name:
+                    elif file_name == TITLES:
                         # Заменяем в словаре row ключ на соотв. модели.
                         row['category_id'] = row['category']
                         del row['category']
                         Title.objects.update_or_create(**row)
-                    elif 'genre_title.csv' == file_name:
+                    elif file_name == GENRE_TITLE:
                         GenreTitle.objects.update_or_create(**row)
-                    elif 'users.csv' == file_name:
+                    elif file_name == USERS:
                         MyUser.objects.update_or_create(**row)
-
-                    elif 'review.csv' == file_name:
+                    elif file_name == REVIEW:
                         row['author_id'] = row['author']
                         del row['author']
                         Review.objects.update_or_create(**row)
-
-                    elif 'comments.csv' == file_name:
+                    elif file_name == COMMENTS:
                         row['review_id_id'] = row['review_id']
                         row['author_id'] = row['author']
                         del row['author'], row['review_id']
