@@ -188,7 +188,7 @@ http://127.0.0.1:8000/api/v1/titles/1/reviews/2/comments/
 
 Для удобства загрузки данных из csv-файлов реализован скрипт load_data_csv.
 Для его запуска, нужно перейти в директорию 'api_yamdb/api_yamdb',
-и запустить скрипт командой 'python manage.py load_data_csv'
+и запустить скрипт командой 'python manage.py load_data_csv'.
 
 ### Команда разработчиков:
 

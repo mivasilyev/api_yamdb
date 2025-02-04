@@ -15,6 +15,7 @@ ROLES = (
 
 
 class MyUser(AbstractUser):
+
     email = models.CharField(
         'Электронная почта', max_length=EMAIL_MAX_LENGTH, unique=True)
     bio = models.TextField('Биография', blank=True)
