@@ -3,7 +3,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils.text import Truncator
 
-from api_yamdb.constants import (LENG_MAX, MAX_SCORE, MIN_SCORE)
+from api_yamdb.constants import (LENG_MAX, MAX_SCORE, MIN_SCORE, NUMBER_WORDS)
 from reviews.validators import current_year
 
 User = get_user_model()
@@ -25,7 +25,7 @@ class BaseModelCategoryGenre(models.Model):
         ordering = ('name',)
 
     def __str__(self):
-        return Truncator(self.name).words(5)
+        return Truncator(self.name).words(NUMBER_WORDS)
 
 
 class Genre(BaseModelCategoryGenre):
@@ -47,7 +47,7 @@ class Category(BaseModelCategoryGenre):
 class Title(models.Model):
     """Произведения."""
 
-    name = models.CharField('Наименование произведения', max_length=256)
+    name = models.CharField('Наименование произведения', max_length=LENG_MAX)
     year = models.SmallIntegerField(
         'Дата выхода произведения',
         validators=(current_year,)
@@ -74,6 +74,7 @@ class Title(models.Model):
         default_related_name = 'titles'
         verbose_name = 'произведение'
         verbose_name_plural = 'Произведения'
+        ordering = ('year', 'name',)
 
     def __str__(self):
         return self.name
@@ -114,7 +115,7 @@ class BaseModelReviewComment(models.Model):
         ordering = ('-pub_date',)
 
     def __str__(self):
-        return Truncator(self.text).words(5)
+        return Truncator(self.text).words(NUMBER_WORDS)
 
 
 class Review(BaseModelReviewComment):
