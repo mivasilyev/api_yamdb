@@ -18,6 +18,7 @@ class TitleInline(admin.TabularInline):
     verbose_name_plural = 'Произведения'
 
 
+@admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     """Админка для категорий."""
 
@@ -31,6 +32,7 @@ class CategoryAdmin(admin.ModelAdmin):
         return obj.titles.all().count()
 
 
+@admin.register(Genre)
 class GenreAdmin(admin.ModelAdmin):
     """Админка для жанров."""
 
@@ -43,6 +45,7 @@ class GenreAdmin(admin.ModelAdmin):
         return obj.titles.all().count()
 
 
+@admin.register(Title)
 class TitleAdmin(admin.ModelAdmin):
     """Админка для произведений."""
 
@@ -72,6 +75,7 @@ class TitleAdmin(admin.ModelAdmin):
         return round(rating) if rating is not None else rating
 
 
+@admin.register(Review)
 class ReviewAdmin(admin.ModelAdmin):
     """Админка для отзывов."""
 
@@ -87,16 +91,10 @@ class ReviewAdmin(admin.ModelAdmin):
         return comments
 
 
+@admin.register(Comment)
 class CommentAdmin(admin.ModelAdmin):
     """Админка для комментариев."""
 
     list_display = ('review_id', 'author', 'text', 'pub_date')
     list_display_links = ('text',)
     list_filter = ('author',)
-
-
-admin.site.register(Title, TitleAdmin)
-admin.site.register(Genre, GenreAdmin)
-admin.site.register(Category, CategoryAdmin)
-admin.site.register(Review, ReviewAdmin)
-admin.site.register(Comment, CommentAdmin)

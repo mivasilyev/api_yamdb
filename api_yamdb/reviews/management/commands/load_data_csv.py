@@ -31,22 +31,19 @@ class Command(BaseCommand):
                     elif file_name == GENRE:
                         Genre.objects.update_or_create(**row)
                     elif file_name == TITLES:
-                        # Заменяем в словаре row ключ на соотв. модели.
-                        row['category_id'] = row['category']
-                        del row['category']
+                        # Заменяем в словаре row ключ на соответств. модели.
+                        row['category_id'] = row.pop('category')
                         Title.objects.update_or_create(**row)
                     elif file_name == GENRE_TITLE:
                         GenreTitle.objects.update_or_create(**row)
                     elif file_name == USERS:
                         ProjectUser.objects.update_or_create(**row)
                     elif file_name == REVIEW:
-                        row['author_id'] = row['author']
-                        del row['author']
+                        row['author_id'] = row.pop('author')
                         Review.objects.update_or_create(**row)
                     elif file_name == COMMENTS:
-                        row['review_id_id'] = row['review_id']
-                        row['author_id'] = row['author']
-                        del row['author'], row['review_id']
+                        row['review_id_id'] = row.pop('review_id')
+                        row['author_id'] = row.pop('author')
                         Comment.objects.update_or_create(**row)
                 cnt += 1
                 self.stdout.write(
