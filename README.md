@@ -1,6 +1,6 @@
 ### Проект API YaMDb
 
-Учебный проект по созданию API со следующим функционалом:
+Проект по созданию API со следующим функционалом:
 
 - Проект YaMDb собирает отзывы пользователей на произведения. Сами произведения в YaMDb не хранятся.
 - Произведения делятся на категории (Книги, Фильмы, Музыка, Изобразительное искусство, Ювелирка и т.д.).
@@ -21,32 +21,24 @@
 Клонировать репозиторий и перейти в него в командной строке:
 
 ```
-git clone https://github.com/GrenkaGenka/api_yamdb.git
-```
-
-```
+git clone https://github.com/mivasilyev/api_yamdb.git
 cd api_yamdb
 ```
 
-Cоздать и активировать виртуальное окружение:
+Cоздать и активировать виртуальное окружение, установить зависимости из файла requirements.txt:
 
 ```
 python3.9 -m venv venv
 source venv/bin/activate
-```
-
-Установить зависимости из файла requirements.txt:
-
-```
-python3 -m pip install --upgrade pip
+python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
 Выполнить миграции и запустить проект:
 
 ```
-python3 manage.py migrate
-python3 manage.py runserver
+python manage.py migrate
+python manage.py runserver
 ```
 
 ### Примеры запросов и ответов API:
@@ -118,7 +110,7 @@ http://127.0.0.1:8000/api/v1/titles/
 }
 ```
 
-Отправить отзыв на произведение id=1 (POST) (зарегистрированный пльзователь):
+Отправить отзыв на произведение id=1 (POST) (зарегистрированный пользователь):
 ```
 {
     "text": "Ставлю десять звёзд!",
